@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Vote, PlusCircle, BarChart3, ShieldCheck } from 'lucide-react';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import Anketler from './components/Anketler';
+import SorSor from './components/SorSor';
 import './App.css';
 
 function App() {
-  // Aktif sekmeyi tutan state (SPA yönlendirmesi simülasyonu)
-  const [activeTab, setActiveTab] = useState('anketler');
-
-  // Başlangıç anket verileri
+  // Başlangıç anket verileri (Merkezi State)
   const [polls, setPolls] = useState([
     {
       id: 1,
@@ -30,11 +29,6 @@ function App() {
     }
   ]);
 
-  // Yeni anket formu için stateler
-  const [newQuestion, setNewQuestion] = useState('');
-  const [opt1, setOpt1] = useState('');
-  const [opt2, setOpt2] = useState('');
-
   // Oy verme fonksiyonu
   const handleVote = (pollId, optionIndex) => {
     setPolls(polls.map(poll => {
@@ -53,135 +47,54 @@ function App() {
   };
 
   // Yeni anket ekleme fonksiyonu
-  const handleCreatePoll = (e) => {
-    e.preventDefault();
-    if (!newQuestion || !opt1 || !opt2) return;
-
-    const newPoll = {
-      id: polls.length + 1,
-      question: newQuestion,
-      options: [
-        { text: opt1, votes: 0 },
-        { text: opt2, votes: 0 }
-      ],
-      totalVotes: 0,
-      voted: false
-    };
-
+  const handleAddPoll = (newPoll) => {
     setPolls([newPoll, ...polls]);
-    setNewQuestion('');
-    setOpt1('');
-    setOpt2('');
-    setActiveTab('anketler'); // Listeye geri dön
   };
 
   return (
-    <div className="app-container">
-      {/* Header */}
-      <header className="header">
-        <h1>eczanecim.kararsizkaldim.com</h1>
-        <p>Sağlık ve Kozmetikte İkilemlerinizi Topluluk Çözüyor 🩺</p>
-      </header>
+    <BrowserRouter>
+      <div className="app-container">
+        {/* Üst Başlık */}
+        <header className="header">
+          <h1>://kararsizkaldim.com</h1>
+          <p>Sağlık ve Kozmetikte İkilemlerinizi Topluluk Çözüyor 🩺</p>
+        </header>
 
-      {/* İstemci Taraflı Menü (Sunucuya istek atmaz) */}
-      <nav className="navbar">
-        <button 
-          className={`nav-btn ${activeTab === 'anketler' ? 'active' : ''}`}
-          onClick={() => setActiveTab('anketler')}
-        >
-          Anketleri Oyla
-        </button>
-        <button 
-          className={`nav-btn ${activeTab === 'sor' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sor')}
-        >
-          Kararsız Kaldım?
-        </button>
-      </nav>
+        {/* Gerçek Linklerle Navigasyon Barı */}
+        <nav className="navbar">
+          <NavLink 
+            to="/anketler" 
+            className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+          >
+            Anketleri Oyla
+          </NavLink>
+          <NavLink 
+            to="/sor-sor" 
+            className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+          >
+            Kararsız Kaldım?
+          </NavLink>
+        </nav>
 
-      {/* Dinamik İçerik Alanı */}
-      <main className="content">
-        {activeTab === 'anketler' ? (
-          <div>
-            {polls.map((poll) => (
-              <div key={poll.id} className="poll-card">
-                <h3 className="poll-question">{poll.question}</h3>
-                <div>
-                  {poll.options.map((option, index) => {
-                    // Yüzde hesaplama
-                    const percent = poll.totalVotes > 0 
-                      ? Math.round((option.votes / poll.totalVotes) * 100) 
-                      : 0;
-                    
-                    return (
-                      <button 
-                        key={index} 
-                        className="option-btn"
-                        onClick={() => handleVote(poll.id, index)}
-                        disabled={poll.voted}
-                      >
-                        {/* Oy verildiyse arkada doluluk çubuğu gösterir */}
-                        {poll.voted && (
-                          <div className="result-bar" style={{ width: `${percent}%` }}></div>
-                        )}
-                        <span className="option-text">
-                          <span>{option.text}</span>
-                          {poll.voted && <span>%{percent} ({option.votes})</span>}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="poll-footer">
-                  <span>📊 Toplam Oy: {poll.totalVotes}</span>
-                  {poll.voted && <span style={{color: 'var(--primary)'}}>✓ Oyunuz Kaydedildi</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="poll-card">
-            <h2 style={{marginTop: 0, fontSize: '1.25rem'}}>Yeni Kararsızlık Anketi Aç</h2>
-            <form onSubmit={handleCreatePoll}>
-              <div className="form-group">
-                <label>Kararsız Kaldığınız Soru:</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="Örn: Hangi güneş kremi leke yapmaz?"
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>1. Seçenek (Ürün / Marka):</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="Seçenek A"
-                  value={opt1}
-                  onChange={(e) => setOpt1(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>2. Seçenek (Ürün / Marka):</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="Seçenek B"
-                  value={opt2}
-                  onChange={(e) => setOpt2(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className="submit-btn">Anketi Canlıya Al</button>
-            </form>
-          </div>
-        )}
-      </main>
-    </div>
+        {/* Dinamik Rota Alanı */}
+        <main className="content">
+          <Routes>
+            {/* Anasayfaya gelindiğinde direkt /anketler'e yönlendirir */}
+            <Route path="/" element={<Navigate to="/anketler" replace />} />
+            
+            <Route 
+              path="/anketler" 
+              element={<Anketler polls={polls} onVote={handleVote} />} 
+            />
+            
+            <Route 
+              path="/sor-sor" 
+              element={<SorSor onAddPoll={handleAddPoll} nextId={polls.length + 1} />} 
+            />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
 
