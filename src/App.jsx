@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import Anketler from './components/Anketler';
 import SorSor from './components/SorSor';
+import AnketDetay from './components/AnketDetay';
 import './App.css';
 
 function App() {
-  // Başlangıç anket verileri (Merkezi State)
   const [polls, setPolls] = useState([
     {
       id: 1,
@@ -29,67 +29,71 @@ function App() {
     }
   ]);
 
-  // Oy verme fonksiyonu
+  // Yorumları tutan merkezi state
+  const [comments, setComments] = useState({
+    1: [
+      { id: 1, user: "Ahmet K.", text: "CeraVe bende sivilce yaptı, Lipikar çok daha yoğun." },
+      { id: 2, user: "Ayşe Y.", text: "Kuru ciltler kesinlikle CeraVe kullanmalı, harika nemlendiriyor." }
+    ],
+    2: [
+      { id: 1, user: "Can M.", text: "B vitamini kompleksi sınav sabahları kurtarıcım oluyor." }
+    ]
+  });
+
   const handleVote = (pollId, optionIndex) => {
     setPolls(polls.map(poll => {
       if (poll.id === pollId && !poll.voted) {
         const updatedOptions = [...poll.options];
         updatedOptions[optionIndex].votes += 1;
-        return {
-          ...poll,
-          options: updatedOptions,
-          totalVotes: poll.totalVotes + 1,
-          voted: true
-        };
+        return { ...poll, options: updatedOptions, totalVotes: poll.totalVotes + 1, voted: true };
       }
       return poll;
     }));
   };
 
-  // Yeni anket ekleme fonksiyonu
   const handleAddPoll = (newPoll) => {
     setPolls([newPoll, ...polls]);
+  };
+
+  // Yeni yorum ekleme fonksiyonu
+  const handleAddComment = (pollId, commentText) => {
+    const newComment = {
+      id: Date.now(),
+      user: "Misafir Kullanıcı",
+      text: commentText
+    };
+    setComments({
+      ...comments,
+      [pollId]: [...(comments[pollId] || []), newComment]
+    });
   };
 
   return (
     <BrowserRouter>
       <div className="app-container">
-        {/* Üst Başlık */}
         <header className="header">
           <h1>://kararsizkaldim.com</h1>
           <p>Sağlık ve Kozmetikte İkilemlerinizi Topluluk Çözüyor 🩺</p>
         </header>
 
-        {/* Gerçek Linklerle Navigasyon Barı */}
         <nav className="navbar">
-          <NavLink 
-            to="/anketler" 
-            className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
-          >
+          <NavLink to="/anketler" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
             Anketleri Oyla
           </NavLink>
-          <NavLink 
-            to="/sor-sor" 
-            className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
-          >
+          <NavLink to="/sor-sor" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
             Kararsız Kaldım?
           </NavLink>
         </nav>
 
-        {/* Dinamik Rota Alanı */}
         <main className="content">
           <Routes>
-            {/* Anasayfaya gelindiğinde direkt /anketler'e yönlendirir */}
             <Route path="/" element={<Navigate to="/anketler" replace />} />
-            
+            <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} />} />
+            <Route path="/sor-sor" element={<SorSor onAddPoll={handleAddPoll} nextId={polls.length + 1} />} />
+            {/* Dinamik Detay Sayfası Rotası */}
             <Route 
-              path="/anketler" 
-              element={<Anketler polls={polls} onVote={handleVote} />} 
-            />
-            
-            <Route 
-              path="/sor-sor" 
-              element={<SorSor onAddPoll={handleAddPoll} nextId={polls.length + 1} />} 
+              path="/anketler/:id" 
+              element={<AnketDetay polls={polls} comments={comments} onVote={handleVote} onAddComment={handleAddComment} />} 
             />
           </Routes>
         </main>
