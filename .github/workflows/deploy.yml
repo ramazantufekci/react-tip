@@ -24,7 +24,7 @@ jobs:
       - name: Install Dependencies2
         run: npm ci
       - name: Dependencies Control
-        run: npm audit
+        run: npm audit fix
 
       - name: Build Project
         run: npm run build
