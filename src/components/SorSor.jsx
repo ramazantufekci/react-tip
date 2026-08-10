@@ -2,23 +2,39 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function SorSor({ onAddPoll, nextId }) {
-  const [question, setQuestion] = useState('');
-  const [opt1, setOpt1] = useState('');
-  const [opt2, setOpt2] = useState('');
-  
-  // Sayfa yönlendirmesi tetiklemek için kullanılan kanca
   const navigate = useNavigate();
+  const [question, setQuestion] = useState('');
+  const [category, setCategory] = useState('Cilt Bakımı'); // Varsayılan kategori
+  const [option1, setOption1] = useState('');
+  const [option2, setOption2] = useState('');
+
+  // Sağlık ve kozmetik konseptine uygun hazır kategorilerimiz
+  const categoriesList = [
+    "Cilt Bakımı",
+    "Takviye Edici Gıda",
+    "Saç Bakımı",
+    "Makyaj & Kozmetik",
+    "Vücut Bakımı",
+    "Genel Sağlık"
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!question || !opt1 || !opt2) return;
 
+    // Basit bir boşluk kontrolü
+    if (!question.trim() || !option1.trim() || !option2.trim()) {
+      alert("Lütfen tüm alanları doldurun!");
+      return;
+    }
+
+    // App.jsx'teki handleAddPoll fonksiyonuna göndereceğimiz yeni anket objesi
     const newPoll = {
       id: nextId,
       question: question,
+      category: category, // Seçilen kategoriyi ekliyoruz
       options: [
-        { text: opt1, votes: 0 },
-        { text: opt2, votes: 0 }
+        { text: option1, votes: 0 },
+        { text: option2, votes: 0 }
       ],
       totalVotes: 0,
       voted: false
@@ -26,48 +42,77 @@ function SorSor({ onAddPoll, nextId }) {
 
     onAddPoll(newPoll);
     
-    // Form başarıyla eklenince programatik olarak /anketler sayfasına yönlendir
+    // Anket başarıyla eklendikten sonra ana sayfaya yönlendiriyoruz
     navigate('/anketler');
   };
 
   return (
-    <div className="poll-card">
-      <h2 style={{marginTop: 0, fontSize: '1.25rem'}}>Yeni Kararsızlık Anketi Aç</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="sor-sor-container">
+      <h2>Kararsız Kaldığınız İkilemi Topluluğa Sorun 🤔</h2>
+      <p className="subtitle">Sağlık, kozmetik veya bakım ürünleri arasında mı kaldınız? Sorunuzu yazın, oylasınlar.</p>
+
+      <form onSubmit={handleSubmit} className="poll-create-form">
+        
+        {/* Soru Alanı */}
         <div className="form-group">
-          <label>Kararsız Kaldığınız Soru:</label>
-          <input 
-            type="text" 
-            className="form-control" 
-            placeholder="Örn: Hangi güneş kremi leke yapmaz?"
+          <label htmlFor="question">İkileminiz / Sorunuz Nedir?</label>
+          <input
+            type="text"
+            id="question"
+            placeholder="Örn: Akne eğilimli ciltler için hangi güneş kremi?"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            maxLength="150"
             required
           />
         </div>
+
+        {/* Kategori Seçim Alanı */}
         <div className="form-group">
-          <label>1. Seçenek (Ürün / Marka):</label>
-          <input 
-            type="text" 
-            className="form-control" 
-            placeholder="Seçenek A"
-            value={opt1}
-            onChange={(e) => setOpt1(e.target.value)}
-            required
-          />
+          <label htmlFor="category">Hangi Kategoriye Ait?</label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="category-select"
+          >
+            {categoriesList.map((cat, idx) => (
+              <option key={idx} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
+
+        {/* Seçenek 1 */}
         <div className="form-group">
-          <label>2. Seçenek (Ürün / Marka):</label>
-          <input 
-            type="text" 
-            className="form-control" 
-            placeholder="Seçenek B"
-            value={opt2}
-            onChange={(e) => setOpt2(e.target.value)}
+          <label htmlFor="option1">1. Seçenek (A Şıkkı)</label>
+          <input
+            type="text"
+            id="option1"
+            placeholder="Örn: La Roche Posay Anthelios Oil Correct"
+            value={option1}
+            onChange={(e) => setOption1(e.target.value)}
             required
           />
         </div>
-        <button type="submit" className="submit-btn">Anketi Canlıya Al</button>
+
+        {/* Seçenek 2 */}
+        <div className="form-group">
+          <label htmlFor="option2">2. Seçenek (B Şıkkı)</label>
+          <input
+            type="text"
+            id="option2"
+            placeholder="Örn: Solante Acnestint"
+            value={option2}
+            onChange={(e) => setOption2(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Gönder Butonu */}
+        <button type="submit" className="submit-poll-btn">
+          Kararsızlığımı Paylaş 🚀
+        </button>
+
       </form>
     </div>
   );
