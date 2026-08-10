@@ -161,3 +161,97 @@ body {
 .detail-link:hover {
   color: var(--primary-dark);
 }
+
+.poll-card {
+  display: flex;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  padding: 16px;
+}
+
+.upvote-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 16px;
+  justify-content: flex-start;
+  padding-top: 4px;
+}
+
+.upvote-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.upvote-btn:hover {
+  transform: scale(1.2);
+}
+
+.upvote-btn.upvoted {
+  filter: drop-shadow(0 0 4px #ff4500);
+}
+
+.poll-category-tag {
+  background: #f0f2f5;
+  color: #555;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.category-filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.category-btn {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+}
+
+.category-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.poll-option-row {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  margin: 6px 0;
+  border: 1px solid #ddd;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(0, 123, 255, 0.15);
+  z-index: 0;
+  transition: width 0.5s ease-out;
+}
+
+.option-text, .option-percent {
+  z-index: 1;
+}
+
