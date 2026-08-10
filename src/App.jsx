@@ -73,11 +73,13 @@ function App() {
     // Arayüzde bekleme hissi yaratmamak için mevcut durumu alalım
     const targetPoll = polls.find(p => p.id === pollId);
     if (!targetPoll) return;
-
+    const actionType = targetPoll.upvotedByMe ? 'remove':'add';
     try {
       // Laravel tarafındaki upvote ucuna istek atıyoruz
       const response = await fetch(`${API_BASE_URL}/polls/${pollId}/upvote`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionType }) // Laravel'e ne yapacağını söylüyoruz
       });
 
       if (response.ok) {
@@ -86,7 +88,7 @@ function App() {
             const hasUpvoted = poll.upvotedByMe;
             return {
               ...poll,
-              upvotes: hasUpvoted ? poll.upvotes - 1 : poll.upvotes + 1,
+              upvotes: hasUpvoted ? Math.Max(0,poll.upvotes - 1) : poll.upvotes + 1,
               upvotedByMe: !hasUpvoted
             };
           }
