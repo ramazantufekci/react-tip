@@ -19,7 +19,9 @@ jobs:
           #cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci --include=dev
+        run:
+          - npm install
+          - npm ci --include=dev
 
       - name: Build Project
         run: npm run build
