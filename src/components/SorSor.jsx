@@ -1,116 +1,130 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function SorSor({ onAddPoll, nextId }) {
+function SorSor() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
-  const [category, setCategory] = useState('Cilt Bakımı'); // Varsayılan kategori
+  const [category, setCategory] = useState(''); // Her konuda olması için özgür metin alanı
   const [option1, setOption1] = useState('');
   const [option2, setOption2] = useState('');
+  const [image, setImage] = useState(null); // Resim state'i
+  const [loading, setLoading] = useState(false);
 
-  // Sağlık ve kozmetik konseptine uygun hazır kategorilerimiz
-  const categoriesList = [
-    "Cilt Bakımı",
-    "Takviye Edici Gıda",
-    "Saç Bakımı",
-    "Makyaj & Kozmetik",
-    "Vücut Bakımı",
-    "Genel Sağlık"
-  ];
+  const handleFileChange = (e) => {
+    setImage(e.target.files[0]); // Seçilen ilk dosyayı kaydet
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basit bir boşluk kontrolü
-    if (!question.trim() || !option1.trim() || !option2.trim()) {
+    if (!question.trim() || !category.trim() || !option1.trim() || !option2.trim()) {
       alert("Lütfen tüm alanları doldurun!");
       return;
     }
 
-    // App.jsx'teki handleAddPoll fonksiyonuna göndereceğimiz yeni anket objesi
-    const newPoll = {
-      id: nextId,
-      question: question,
-      category: category, // Seçilen kategoriyi ekliyoruz
-      options: [
-        { text: option1, votes: 0 },
-        { text: option2, votes: 0 }
-      ],
-      totalVotes: 0,
-      voted: false
-    };
+    setLoading(true);
 
-    onAddPoll(newPoll);
+    // Resim yüklemelerinde API'ye veri göndermek için FormData kullanılır
+    const formData = new FormData();
+    formData.append('question', question);
+    formData.append('category', category);
     
-    // Anket başarıyla eklendikten sonra ana sayfaya yönlendiriyoruz
-    navigate('/anketler');
+    // Şıkları Laravel'in çözebilmesi için JSON string'e çeviriyoruz
+    const optionsArray = [
+      { text: option1, votes: 0 },
+      { text: option2, votes: 0 }
+    ];
+    formData.append('options', JSON.stringify(optionsArray));
+
+    // Eğer resim seçildiyse form verisine ekle
+    if (image) {
+      formData.append('image', image);
+    }
+
+    try {
+      // Laravel backend URL'nizi buraya yazın
+      const response = await fetch('https://smarttools.kararsizkaldim.com/api/polls', {
+        method: 'POST',
+        body: formData, // JSON.stringify YOK, direkt formData nesnesi gidiyor
+        // Header'da Content-Type belirtmiyoruz, tarayıcı otomatik multipart/form-data yapar
+      });
+
+      if (response.ok) {
+        navigate('/anketler');
+      } else {
+        alert("Anket oluşturulurken bir hata oluştu.");
+      }
+    } catch (error) {
+      console.error("Bağlantı hatası:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="sor-sor-container">
-      <h2>Kararsız Kaldığınız İkilemi Topluluğa Sorun 🤔</h2>
-      <p className="subtitle">Sağlık, kozmetik veya bakım ürünleri arasında mı kaldınız? Sorunuzu yazın, oylasınlar.</p>
+      <h2>Aklınıza Takılan Her Konuda Soru Sorun 🌐</h2>
+      <p className="subtitle">Gündem, teknoloji, oyun, spor veya alışveriş... İkileminizi resim ekleyerek topluluğa sunun.</p>
 
       <form onSubmit={handleSubmit} className="poll-create-form">
         
-        {/* Soru Alanı */}
         <div className="form-group">
-          <label htmlFor="question">İkileminiz / Sorunuz Nedir?</label>
+          <label>Sorunuz / İkileminiz Nedir?</label>
           <input
             type="text"
-            id="question"
-            placeholder="Örn: Akne eğilimli ciltler için hangi güneş kremi?"
+            placeholder="Örn: Sizce hangi oyun konsolunu almalıyım?"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            maxLength="150"
             required
           />
         </div>
 
-        {/* Kategori Seçim Alanı */}
         <div className="form-group">
-          <label htmlFor="category">Hangi Kategoriye Ait?</label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="category-select"
-          >
-            {categoriesList.map((cat, idx) => (
-              <option key={idx} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Seçenek 1 */}
-        <div className="form-group">
-          <label htmlFor="option1">1. Seçenek (A Şıkkı)</label>
+          <label>Konu / Kategori Başlığı</label>
           <input
             type="text"
-            id="option1"
-            placeholder="Örn: La Roche Posay Anthelios Oil Correct"
+            placeholder="Örn: Oyun, Teknoloji, Dizi, Spor"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Resim Yükleme Alanı */}
+        <div className="form-group">
+          <label>Görsel Ekle (Opsiyonel)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="file-input"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>1. Seçenek</label>
+          <input
+            type="text"
+            placeholder="Örn: PlayStation 5 Pro"
             value={option1}
             onChange={(e) => setOption1(e.target.value)}
             required
           />
         </div>
 
-        {/* Seçenek 2 */}
         <div className="form-group">
-          <label htmlFor="option2">2. Seçenek (B Şıkkı)</label>
+          <label>2. Seçenek</label>
           <input
             type="text"
-            id="option2"
-            placeholder="Örn: Solante Acnestint"
+            placeholder="Örn: Xbox Series X"
             value={option2}
             onChange={(e) => setOption2(e.target.value)}
             required
           />
         </div>
 
-        {/* Gönder Butonu */}
-        <button type="submit" className="submit-poll-btn">
-          Kararsızlığımı Paylaş 🚀
+        <button type="submit" className="submit-poll-btn" disabled={loading}>
+          {loading ? "Paylaşılıyor..." : "İkilemi Herkesle Paylaş 🚀"}
         </button>
 
       </form>
