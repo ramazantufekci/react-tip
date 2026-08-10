@@ -414,5 +414,18 @@ body {
   background: #218838;
 }
 
+.poll-image-container {
+  margin: 12px 0;
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 300px; /* Resimlerin devasa boyuta ulaşmasını engeller */
+}
+
+.poll-main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 
