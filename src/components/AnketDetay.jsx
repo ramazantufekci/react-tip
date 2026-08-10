@@ -1,94 +1,121 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-function AnketDetay({ polls, comments, onVote, onAddComment }) {
-  const { id } = useParams(); // URL'deki :id parametresini alır (Örn: "1")
-  const pollId = parseInt(id);
-  
+function AnketDetay({ polls, comments, onVote, onAddComment, onUpvote }) {
+  const { id } = useParams();
   const [commentInput, setCommentInput] = useState('');
 
-  // İlgili anketi bul
-  const poll = polls.find(p => p.id === pollId);
-  // İlgili ankete ait yorumları getir
-  const pollComments = comments[pollId] || [];
+  // URL'den gelen string id'yi sayıya çevirip ilgili anketi buluyoruz
+  const poll = polls.find(p => p.id === parseInt(id));
+  const pollComments = comments[id] || [];
 
   if (!poll) {
     return (
-      <div className="poll-card">
-        <h3>Aradığınız anket bulunamadı.</h3>
-        <Link to="/anketler">Anketlere Dön</Link>
+      <div className="error-container">
+        <h2>Anket Bulunamadı 😕</h2>
+        <Link to="/anketler" className="back-btn">Anketlere Geri Dön</Link>
       </div>
     );
   }
 
-  const handleCommentSubmit = (e) => {
+  const handleSubmitComment = (e) => {
     e.preventDefault();
     if (!commentInput.trim()) return;
-    onAddComment(pollId, commentInput);
-    setCommentInput('');
+    
+    onAddComment(poll.id, commentInput);
+    setCommentInput(''); // Giriş alanını temizle
   };
 
   return (
-    <div>
-      <Link to="/anketler" style={{ display: 'inline-block', marginBottom: '1rem', color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>
-        ← Anketlere Geri Dön
-      </Link>
+    <div className="anket-detay-container">
+      <Link to="/anketler" className="back-link">⬅ Anketlere Geri Dön</Link>
 
-      {/* Anket Durumu */}
-      <div className="poll-card">
-        <h3 className="poll-question">{poll.question}</h3>
-        <div>
-          {poll.options.map((option, index) => {
-            const percent = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
-            return (
-              <button key={index} className="option-btn" onClick={() => onVote(poll.id, index)} disabled={poll.voted}>
-                {poll.voted && <div className="result-bar" style={{ width: `${percent}%` }}></div>}
-                <span className="option-text">
-                  <span>{option.text}</span>
-                  {poll.voted && <span>%{percent} ({option.votes})</span>}
-                </span>
-              </button>
-            );
-          })}
+      {/* Ana Anket Kartı */}
+      <div className="poll-detailed-card">
+        
+        {/* Sol Taraf: Detaylı Upvote Alanı */}
+        <div className="upvote-section">
+          <button 
+            className={`upvote-btn ${poll.upvotedByMe ? 'upvoted' : ''}`}
+            onClick={() => onUpvote(poll.id)}
+            title="Yukarı Taşı"
+          >
+            🔼
+          </button>
+          <span className="upvote-count">{poll.upvotes}</span>
         </div>
-        <div className="poll-footer">
-          <span>📊 Toplam Oy: {poll.totalVotes}</span>
+
+        {/* Sağ Taraf: Anket Detayları */}
+        <div className="poll-main-content">
+          <div className="poll-header-info">
+            <span className="poll-category-tag">{poll.category || 'Genel'}</span>
+          </div>
+
+          <h2 className="poll-detailed-question">{poll.question}</h2>
+
+          {/* Seçenekler Alanı */}
+          <div className="poll-options">
+            {poll.options.map((option, index) => {
+              const percent = poll.totalVotes > 0 
+                ? Math.round((option.votes / poll.totalVotes) * 100) 
+                : 0;
+
+              return (
+                <button
+                  key={index}
+                  className={`poll-option-row ${poll.voted ? 'voted-disabled' : ''}`}
+                  onClick={() => onVote(poll.id, index)}
+                  disabled={poll.voted}
+                >
+                  {poll.voted && (
+                    <div 
+                      className="progress-bar-fill" 
+                      style={{ width: `${percent}%` }}
+                    />
+                  )}
+                  <span className="option-text">{option.text}</span>
+                  {poll.voted && <span className="option-percent">%{percent} ({option.votes} oy)</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="total-votes-summary">Toplam kullanılan oy sayısı: <strong>{poll.totalVotes}</strong></p>
         </div>
       </div>
 
       {/* Yorumlar Bölümü */}
-      <div className="poll-card">
-        <h4 style={{ marginTop: 0, borderBottom: '1px solid #e5e7eb', paddingBottom: '8px' }}>💬 Kullanıcı Yorumları ({pollComments.length})</h4>
-        
-        <div className="comments-list" style={{ marginBottom: '1.5rem' }}>
+      <div className="comments-section">
+        <h3>Topluluk Yorumları ({pollComments.length})</h3>
+
+        {/* Yeni Yorum Ekleme Formu */}
+        <form onSubmit={handleSubmitComment} className="comment-form">
+          <textarea
+            placeholder="Bu ikilem hakkında ne düşünüyorsunuz? Tavsiyenizi yazın..."
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            rows="3"
+            required
+          />
+          <button type="submit" className="submit-comment-btn">Yorum Yap</button>
+        </form>
+
+        {/* Yorum Listesi */}
+        <div className="comments-list">
           {pollComments.length === 0 ? (
-            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
+            <p className="no-comments">Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>
           ) : (
-            pollComments.map((comment) => (
-              <div key={comment.id} style={{ background: '#f9fafb', padding: '10px', borderRadius: '6px', marginBottom: '8px', fontSize: '0.9rem' }}>
-                <strong style={{ color: 'var(--primary-dark)', display: 'block', marginBottom: '2px' }}>{comment.user}</strong>
-                <span>{comment.text}</span>
+            pollComments.map(comment => (
+              <div key={comment.id} className="comment-card">
+                <div className="comment-header">
+                  <span className="comment-user">👤 {comment.user}</span>
+                  <span className="comment-date">Şimdi</span>
+                </div>
+                <p className="comment-text">{comment.text}</p>
               </div>
             ))
           )}
         </div>
-
-        {/* Yorum Yapma Formu */}
-        <form onSubmit={handleCommentSubmit}>
-          <div className="form-group">
-            <textarea 
-              className="form-control" 
-              rows="3" 
-              placeholder="Deneyimlerinizi paylaşın veya tavsiyede bulunun..."
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              style={{ resize: 'none', fontFamily: 'inherit' }}
-              required
-            ></textarea>
-          </div>
-          <button type="submit" className="submit-btn" style={{ padding: '8px 12px', width: 'auto', float: 'right' }}>Yorum Gönder</button>
-          <div style={{ clear: 'both' }}></div>
-        </form>
       </div>
     </div>
   );
