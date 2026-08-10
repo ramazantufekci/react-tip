@@ -34,4 +34,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: |
             pages project list
-            pages deploy dist --project-name=eczanecim-kararsizkaldim
+            pages deploy dist --project-name=radyo
