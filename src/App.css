@@ -255,3 +255,90 @@ body {
   z-index: 1;
 }
 
+.poll-detailed-card {
+  display: flex;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.poll-main-content {
+  flex: 1;
+}
+
+.poll-detailed-question {
+  margin-top: 8px;
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #222;
+}
+
+.total-votes-summary {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #666;
+}
+
+.comments-section {
+  margin-top: 32px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.comment-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+
+.submit-comment-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.submit-comment-btn:hover {
+  background: #0056b3;
+}
+
+.comment-card {
+  border-left: 3px solid #007bff;
+  background: #f8f9fa;
+  padding: 12px 16px;
+  margin-top: 12px;
+  border-radius: 0 8px 8px 0;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 6px;
+}
+
+.comment-user {
+  font-weight: bold;
+  color: #333;
+}
+
+.back-link {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+}
+
+
