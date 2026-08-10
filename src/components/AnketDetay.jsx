@@ -52,6 +52,12 @@ function AnketDetay({ polls, comments, onVote, onAddComment, onUpvote }) {
           </div>
 
           <h2 className="poll-detailed-question">{poll.question}</h2>
+          {poll.image_path && (
+  <div className="poll-image-container">
+    <img src={poll.image_path} alt={poll.question} className="poll-main-image" />
+  </div>
+)}
+
 
           {/* Seçenekler Alanı */}
           <div className="poll-options">
