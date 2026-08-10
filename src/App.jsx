@@ -10,6 +10,9 @@ function App() {
     {
       id: 1,
       question: "Cilt kuruluğu için hangi nemlendirici kremi önerirsiniz?",
+      category: "Cilt Bakımı", // Yeni Alan
+      upvotes: 24,           // Yeni Alan (Yukarı taşıma sayısı)
+      upvotedByMe: false,    // Yeni Alan (Kullanıcı tıkladı mı?)
       options: [
         { text: "La Roche-Posay Lipikar", votes: 142 },
         { text: "CeraVe Moisturizing Cream", votes: 198 }
@@ -20,6 +23,9 @@ function App() {
     {
       id: 2,
       question: "Sınav döneminde odaklanma için hangi takviye daha etkili?",
+      category: "Takviye Edici Gıda", // Yeni Alan
+      upvotes: 12,                  // Yeni Alan
+      upvotedByMe: false,           // Yeni Alan
       options: [
         { text: "Omega 3 (Balık Yağı)", votes: 85 },
         { text: "Ginkgo Biloba & B Vitamini", votes: 64 }
@@ -40,6 +46,7 @@ function App() {
     ]
   });
 
+  // Anket seçeneklerine oy verme fonksiyonu
   const handleVote = (pollId, optionIndex) => {
     setPolls(polls.map(poll => {
       if (poll.id === pollId && !poll.voted) {
@@ -51,8 +58,29 @@ function App() {
     }));
   };
 
+  // Yeni Alan: Anketi yukarı taşıma (Upvote) fonksiyonu
+  const handleUpvote = (pollId) => {
+    setPolls(polls.map(poll => {
+      if (poll.id === pollId) {
+        const hasUpvoted = poll.upvotedByMe;
+        return {
+          ...poll,
+          upvotes: hasUpvoted ? poll.upvotes - 1 : poll.upvotes + 1,
+          upvotedByMe: !hasUpvoted
+        };
+      }
+      return poll;
+    }));
+  };
+
+  // Yeni anket ekleme fonksiyonu (Kategori desteğiyle)
   const handleAddPoll = (newPoll) => {
-    setPolls([newPoll, ...polls]);
+    const formattedPoll = {
+      ...newPoll,
+      upvotes: 0,
+      upvotedByMe: false
+    };
+    setPolls([formattedPoll, ...polls]);
   };
 
   // Yeni yorum ekleme fonksiyonu
@@ -88,12 +116,18 @@ function App() {
         <main className="content">
           <Routes>
             <Route path="/" element={<Navigate to="/anketler" replace />} />
-            <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} />} />
-            <Route path="/sor-sor" element={<SorSor onAddPoll={handleAddPoll} nextId={polls.length + 1} />} />
-            {/* Dinamik Detay Sayfası Rotası */}
+            {/* Anketler bileşenine upvote fonksiyonunu ve güncel anketleri geçiyoruz */}
+            <Route 
+              path="/anketler" 
+              element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} 
+            />
+            <Route 
+              path="/sor-sor" 
+              element={<SorSor onAddPoll={handleAddPoll} nextId={polls.length + 1} />} 
+            />
             <Route 
               path="/anketler/:id" 
-              element={<AnketDetay polls={polls} comments={comments} onVote={handleVote} onAddComment={handleAddComment} />} 
+              element={<AnketDetay polls={polls} comments={comments} onVote={handleVote} onAddComment={handleAddComment} onUpvote={handleUpvote} />} 
             />
           </Routes>
         </main>
