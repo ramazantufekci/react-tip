@@ -6,7 +6,7 @@ import AnketDetay from './components/AnketDetay';
 import './App.css';
 
 // Laravel API'nizin temel URL adresi
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
 
 function App() {
   const [polls, setPolls] = useState([]);
