@@ -59,6 +59,12 @@ function Anketler({ polls, onVote, onUpvote }) {
                 <h3 className="poll-question">
                   <Link to={`/anketler/${poll.id}`}>{poll.question}</Link>
                 </h3>
+                {poll.image_path && (
+  <div className="poll-image-container">
+    <img src={poll.image_path} alt={poll.question} className="poll-main-image" />
+  </div>
+)}
+
 
                 {/* Seçenekler Listesi */}
                 <div className="poll-options">
