@@ -179,23 +179,22 @@ function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setRe
         </form>
       )}
 
-      {/* 💥 Sihirli Kısım: Eğer bu yorumun altında da replies (yanıtlar) varsa,
-          CommentNode bileşeni kendisini tekrar çağırarak hiyerarşiyi sonsuza kadar uzatır */}
-      {comment.replies && comment.replies.length > 0 && (
-        <div className="replies-nested-container">
-          {comment.replies.map(reply => (
-            <CommentNode 
-              key={reply.id} 
-              comment={reply} // Alt yanıtı ana yorummuş gibi içeri paslar
-              replyingToId={replyingToId}
-              setReplyingToId={setReplyingToId}
-              replyInput={replyInput}
-              setReplyInput={setReplyInput}
-              handleCommentSubmit={handleCommentSubmit}
-            />
-          ))}
-        </div>
-      )}
+      {/* 💥 Güncellenen Sihirli Kısım: comment.replies yerine comment.childReplies kullanıyoruz */}
+{comment.childReplies && comment.childReplies.length > 0 && (
+  <div className="replies-nested-container">
+    {comment.childReplies.map(reply => (
+      <CommentNode 
+        key={reply.id} 
+        comment={reply} // Alt yanıtı içeri aktarır (Sonsuz derinlik tetiklenir)
+        replyingToId={replyingToId}
+        setReplyingToId={setReplyingToId}
+        replyInput={replyInput}
+        setReplyInput={setReplyInput}
+        handleCommentSubmit={handleCommentSubmit}
+      />
+    ))}
+  </div>
+)}
     </div>
   );
 }
