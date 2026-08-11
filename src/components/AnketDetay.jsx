@@ -89,7 +89,6 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
                  'Authorization': `Bearer ${token}`},
         body: JSON.stringify({
           text: text,
-          user: "Misafir Kullanıcı",
           parent_id: parentId
         })
       });
