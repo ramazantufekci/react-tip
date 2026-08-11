@@ -9,7 +9,7 @@ function SorSor() {
   const [option2, setOption2] = useState('');
   const [image, setImage] = useState(null); // Resim state'i
   const [loading, setLoading] = useState(false);
-
+  const {token} = useAuth();
   const handleFileChange = (e) => {
     setImage(e.target.files[0]); // Seçilen ilk dosyayı kaydet
   };
