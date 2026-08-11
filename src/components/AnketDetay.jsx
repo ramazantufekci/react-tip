@@ -193,7 +193,9 @@ function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setRe
     <div className="comment-node-branch" style={{ width: '100%' }}>
       <div className="comment-card">
         <div className="comment-header">
-          <span className="comment-user">👤 {comment.user || 'Misafir Kullanıcı'}</span>
+          <span className="comment-user">
+  👤 {comment.author ? comment.author.name : (comment.user || 'Kullanıcı')}
+</span>
           <span className="comment-date">
             {comment.created_at ? new Date(comment.created_at).toLocaleDateString('tr-TR') : 'Şimdi'}
           </span>
