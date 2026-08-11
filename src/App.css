@@ -428,4 +428,74 @@ body {
   object-fit: cover;
 }
 
+.comment-branch {
+  margin-bottom: 20px;
+}
+
+.reply-trigger-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 6px;
+  font-weight: bold;
+}
+
+/* Yanıt Giriş Formu Tasarımı */
+.reply-form {
+  margin-left: 20px;
+  margin-top: 8px;
+  background: #f1f3f5;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.reply-form input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.reply-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.reply-submit-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reply-cancel-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Alt Yanıtların Kapsayıcısı ve Sağa İtilmesi */
+.replies-container {
+  margin-left: 35px; /* Yanıtları sağa kaydırarak hiyerarşi sağlar */
+  border-left: 2px dashed #ced4da;
+  padding-left: 15px;
+  margin-top: 10px;
+}
+
+.reply-card {
+  background: #fdfdfd;
+  border: 1px solid #eaeaea;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
 
