@@ -141,18 +141,39 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
               <img src={poll.image_path} alt={poll.question} className="poll-main-image" />
             </div>
           )}
-          <div className="poll-options">
-            {(poll.options || []).map((option, index) => {
-              const percent = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
-              return (
-                <button key={index} className={`poll-option-row ${poll.voted ? 'voted-disabled' : ''}`} onClick={() => onVote(poll.id, index)} disabled={poll.voted}>
-                  {poll.voted && <div className="progress-bar-fill" style={{ width: `${percent}%` }} />}
-                  <span className="option-text">{option.text}</span>
-                  {poll.voted && <span className="option-percent">%{percent} ({option.votes} oy)</span>}
-                </button>
-              );
-            })}
+          <div className="poll-options resimli-options-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '15px' }}>
+  {(poll.options || []).map((option, index) => {
+    const percent = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
+
+    return (
+      <div key={index} className="option-card-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        
+        {/* Şıkka Ait Resim Varsa Göster */}
+        {option.image_path && (
+          <div className="option-image-preview" style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', marginBottom: '10px', border: '1px solid #ddd' }}>
+            <img src={option.image_path} alt={option.text} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
+        )}
+
+        {/* Oy Verme Butonu */}
+        <button
+          className={`poll-option-row ${poll.voted ? 'voted-disabled' : ''}`}
+          onClick={() => onVote(poll.id, index)}
+          disabled={poll.voted}
+          style={{ width: '100%', position: 'relative' }}
+        >
+          {poll.voted && (
+            <div className="progress-bar-fill" style={{ width: `${percent}%` }} />
+          )}
+          <span className="option-text" style={{ fontWeight: 'bold' }}>{option.text}</span>
+          {poll.voted && <span className="option-percent">%{percent} ({option.votes} oy)</span>}
+        </button>
+        
+      </div>
+    );
+  })}
+</div>
+
           <p className="total-votes-summary">Toplam kullanılan oy sayısı: <strong>{poll.totalVotes ?? 0}</strong></p>
         </div>
       </div>
