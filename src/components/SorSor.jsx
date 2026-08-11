@@ -5,57 +5,47 @@ function SorSor() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState(''); // Her konuda olması için özgür metin alanı
-  const [option1, setOption1] = useState('');
-  const [option2, setOption2] = useState('');
-  const [image, setImage] = useState(null); // Resim state'i
+  const [optionA, setOptionA] = useState('');
+  const [optionB, setOptionB] = useState('');
+  const [imageA, setImageA] = useState(null);
+  const [imageB, setImageB] = useState(null);
   const [loading, setLoading] = useState(false);
   const {token} = useAuth();
-  const handleFileChange = (e) => {
+  /*const handleFileChange = (e) => {
     setImage(e.target.files[0]); // Seçilen ilk dosyayı kaydet
   };
-
+*/
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!question.trim() || !category.trim() || !option1.trim() || !option2.trim()) {
-      alert("Lütfen tüm alanları doldurun!");
+    if (!question.trim() || !category.trim() || !optionA.trim() || !optionB.trim()) {
+      alert("Lütfen gerekli alanları doldurun!");
       return;
     }
 
     setLoading(true);
-
-    // Resim yüklemelerinde API'ye veri göndermek için FormData kullanılır
     const formData = new FormData();
     formData.append('question', question);
     formData.append('category', category);
-    
-    // Şıkları Laravel'in çözebilmesi için JSON string'e çeviriyoruz
-    const optionsArray = [
-      { text: option1, votes: 0 },
-      { text: option2, votes: 0 }
-    ];
-    formData.append('options', JSON.stringify(optionsArray));
+    formData.append('option_a', optionA);
+    formData.append('option_b', optionB);
 
-    // Eğer resim seçildiyse form verisine ekle
-    if (image) {
-      formData.append('image', image);
-    }
+    if (imageA) formData.append('image_a', imageA);
+    if (imageB) formData.append('image_b', imageB);
 
     try {
-      // Laravel backend URL'nizi buraya yazın
-      const response = await fetch('https://smarttools.kararsizkaldim.com/api/polls', {
+      const response = await fetch('http://localhost:8000/api/polls', {
         method: 'POST',
-        body: formData, // JSON.stringify YOK, direkt formData nesnesi gidiyor
-        // Header'da Content-Type belirtmiyoruz, tarayıcı otomatik multipart/form-data yapar
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
       });
 
       if (response.ok) {
         navigate('/anketler');
       } else {
-        alert("Anket oluşturulurken bir hata oluştu.");
+        alert("Anket oluşturulurken hata meydana geldi.");
       }
     } catch (error) {
-      console.error("Bağlantı hatası:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -63,70 +53,46 @@ function SorSor() {
 
   return (
     <div className="sor-sor-container">
-      <h2>Aklınıza Takılan Her Konuda Soru Sorun 🌐</h2>
-      <p className="subtitle">Gündem, teknoloji, oyun, spor veya alışveriş... İkileminizi resim ekleyerek topluluğa sunun.</p>
-
+      <h2>İki Seçeneği Resimlerle Kıyaslayın 📸</h2>
       <form onSubmit={handleSubmit} className="poll-create-form">
         
         <div className="form-group">
-          <label>Sorunuz / İkileminiz Nedir?</label>
-          <input
-            type="text"
-            placeholder="Örn: Sizce hangi oyun konsolunu almalıyım?"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            required
-          />
+          <label>Sorunuz Nedir?</label>
+          <input type="text" placeholder="Örn: Hangi ayakkabı kombinime daha çok uyar?" value={question} onChange={e => setQuestion(e.target.value)} required />
         </div>
 
         <div className="form-group">
-          <label>Konu / Kategori Başlığı</label>
-          <input
-            type="text"
-            placeholder="Örn: Oyun, Teknoloji, Dizi, Spor"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-          />
+          <label>Kategori</label>
+          <input type="text" placeholder="Örn: Moda, Alışveriş" value={category} onChange={e => setCategory(e.target.value)} required />
         </div>
 
-        {/* Resim Yükleme Alanı */}
-        <div className="form-group">
-          <label>Görsel Ekle (Opsiyonel)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="file-input"
-          />
+        {/* SEÇENEK A VE RESMİ */}
+        <div className="option-upload-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+          <div className="form-group">
+            <label>1. Seçenek (A Şıkkı) Metni</label>
+            <input type="text" placeholder="Örn: Beyaz Sneaker" value={optionA} onChange={e => setOptionA(e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label>A Şıkkı İçin Resim (Opsiyonel)</label>
+            <input type="file" accept="image/*" onChange={e => setImageA(e.target.files[0])} />
+          </div>
         </div>
 
-        <div className="form-group">
-          <label>1. Seçenek</label>
-          <input
-            type="text"
-            placeholder="Örn: PlayStation 5 Pro"
-            value={option1}
-            onChange={(e) => setOption1(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>2. Seçenek</label>
-          <input
-            type="text"
-            placeholder="Örn: Xbox Series X"
-            value={option2}
-            onChange={(e) => setOption2(e.target.value)}
-            required
-          />
+        {/* SEÇENEK B VE RESMİ */}
+        <div className="option-upload-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+          <div className="form-group">
+            <label>2. Seçenek (B Şıkkı) Metni</label>
+            <input type="text" placeholder="Örn: Siyah Bot" value={optionB} onChange={e => setOptionB(e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label>B Şıkkı İçin Resim (Opsiyonel)</label>
+            <input type="file" accept="image/*" onChange={e => setImageB(e.target.files[0])} />
+          </div>
         </div>
 
         <button type="submit" className="submit-poll-btn" disabled={loading}>
-          {loading ? "Paylaşılıyor..." : "İkilemi Herkesle Paylaş 🚀"}
+          {loading ? "Yükleniyor..." : "Kıyaslama Anketini Başlat 🚀"}
         </button>
-
       </form>
     </div>
   );
