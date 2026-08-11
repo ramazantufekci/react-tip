@@ -3,11 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 
 const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
 
-function AnketDetay({ polls, onVote, onUpvote }) {
+function AnketDetay({ polls = [], onVote, onUpvote }) {
   const { id } = useParams();
   const [commentInput, setCommentInput] = useState('');
   
-  // Sonsuz Kaydırma State'leri
+  // Hata önleyici: pollComments varsayılan olarak boş bir array olmalı
   const [pollComments, setPollComments] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -16,11 +16,11 @@ function AnketDetay({ polls, onVote, onUpvote }) {
   const [replyingToId, setReplyingToId] = useState(null);
   const [replyInput, setReplyInput] = useState('');
 
+  // Sayısal karşılaştırma garantisi
   const poll = polls.find(p => p.id === parseInt(id));
 
-  // 1. ADIM: Sayfa Sayfa Yorum Çekme Fonksiyonu
   const fetchComments = useCallback(async (pageNumber, isNewComment = false) => {
-    if (loadingComments) return;
+    if (!id) return;
     setLoadingComments(true);
 
     try {
@@ -28,16 +28,17 @@ function AnketDetay({ polls, onVote, onUpvote }) {
       if (response.ok) {
         const result = await response.json();
         
+        // Backend'den data gelip gelmediğini güvenli kontrol ediyoruz
+        const newComments = result.data || [];
+
         if (isNewComment || pageNumber === 1) {
-          // Eğer yeni yorum yapıldıysa veya ilk sayfa isteniyorsa listeyi sıfırla/yenile
-          setPollComments(result.data);
+          setPollComments(newComments);
           setPage(1);
         } else {
-          // Sonsuz kaydırmada eski yorumların ardına yenilerini ekle (Dizileri birleştir)
-          setPollComments(prev => [...prev, ...result.data]);
+          setPollComments(prev => [...(Array.isArray(prev) ? prev : []), ...newComments]);
         }
         
-        setHasMore(result.has_more); // Backend'de daha fazla veri var mı?
+        setHasMore(result.has_more ?? false);
       }
     } catch (error) {
       console.error("Yorumlar yüklenirken hata oluştu:", error);
@@ -46,37 +47,41 @@ function AnketDetay({ polls, onVote, onUpvote }) {
     }
   }, [id]);
 
-  // İlk açılışta 1. sayfayı yükle
+  // İlk yüklemede ve id değiştiğinde tetikle
   useEffect(() => {
-    fetchComments(1);
+    if (id) {
+      setPollComments([]);
+      setPage(1);
+      setHasMore(true);
+      fetchComments(1);
+    }
   }, [id, fetchComments]);
 
-  // 2. ADIM: Kaydırma (Scroll) Takip Mekanizması
+  // Kaydırma Takipçisi
   useEffect(() => {
     const handleScroll = () => {
-      // Sayfa yükleniyorsa veya yüklenecek başka sayfa kalmadıysa işlemi durdur
       if (loadingComments || !hasMore) return;
 
-      // Kullanıcı sayfanın en altından 100 piksel kalacak kadar aşağı kaydırdıysa tetikle
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
-        const nextPage = page + 1;
-        setPage(nextPage);
-        fetchComments(nextPage);
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 120) {
+        setPage(prevPage => {
+          const nextPage = prevPage + 1;
+          fetchComments(nextPage);
+          return nextPage;
+        });
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll); // Hafıza sızıntısını önlemek için temizlik
-  }, [page, hasMore, loadingComments, fetchComments]);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loadingComments, fetchComments]);
 
-  // 3. ADIM: Yorum Gönderme Kontrolü
   const handleCommentSubmit = async (e, parentId = null) => {
     e.preventDefault();
     const text = parentId ? replyInput : commentInput;
     if (!text.trim()) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/polls/${poll.id}/comments`, {
+      const response = await fetch(`${API_BASE_URL}/polls/${id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,8 +95,6 @@ function AnketDetay({ polls, onVote, onUpvote }) {
         setReplyInput('');
         setCommentInput('');
         setReplyingToId(null);
-        
-        // Yeni yorum yapıldığında listeyi en güncel haliyle baştan çeker
         await fetchComments(1, true);
       }
     } catch (error) {
@@ -99,20 +102,27 @@ function AnketDetay({ polls, onVote, onUpvote }) {
     }
   };
 
-  if (!poll) return <div className="error-container">Anket Bulunamadı.</div>;
+  // Eğer anket merkezi state'den henüz yüklenmediyse yükleniyor basıyoruz (Boş sayfa kalmasını önler)
+  if (!poll) {
+    return (
+      <div className="error-container" style={{ textAlign: 'center', padding: '40px' }}>
+        <h2>Anket Yükleniyor veya Bulunamadı... ⏳</h2>
+        <Link to="/anketler" className="back-link">Anketlere Geri Dön</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="anket-detay-container">
       <Link to="/anketler" className="back-link">⬅ Anketlere Geri Dön</Link>
 
-      {/* Anket Detay Kartı */}
       <div className="poll-detailed-card">
         <div className="upvote-section">
           <button className={`upvote-btn ${poll.upvotedByMe ? 'upvoted' : ''}`} onClick={() => onUpvote(poll.id)}>🔼</button>
-          <span className="upvote-count">{poll.upvotes}</span>
+          <span className="upvote-count">{poll.upvotes ?? 0}</span>
         </div>
         <div className="poll-main-content">
-          <span className="poll-category-tag">{poll.category}</span>
+          <span className="poll-category-tag">{poll.category || 'Genel'}</span>
           <h2 className="poll-detailed-question">{poll.question}</h2>
           {poll.image_path && (
             <div className="poll-image-container">
@@ -120,7 +130,7 @@ function AnketDetay({ polls, onVote, onUpvote }) {
             </div>
           )}
           <div className="poll-options">
-            {poll.options.map((option, index) => {
+            {(poll.options || []).map((option, index) => {
               const percent = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
               return (
                 <button key={index} className={`poll-option-row ${poll.voted ? 'voted-disabled' : ''}`} onClick={() => onVote(poll.id, index)} disabled={poll.voted}>
@@ -131,10 +141,10 @@ function AnketDetay({ polls, onVote, onUpvote }) {
               );
             })}
           </div>
+          <p className="total-votes-summary">Toplam kullanılan oy sayısı: <strong>{poll.totalVotes ?? 0}</strong></p>
         </div>
       </div>
 
-      {/* Yorum Alanı */}
       <div className="comments-section">
         <h3>Topluluk Yorumları</h3>
 
@@ -150,7 +160,7 @@ function AnketDetay({ polls, onVote, onUpvote }) {
         </form>
 
         <div className="comments-list">
-          {pollComments.map(comment => (
+          {Array.isArray(pollComments) && pollComments.map(comment => (
             <CommentNode 
               key={comment.id} 
               comment={comment}
@@ -162,13 +172,11 @@ function AnketDetay({ polls, onVote, onUpvote }) {
             />
           ))}
           
-          {/* Kaydırma Esnasında Alt Kısımda Çıkan Yükleniyor Bildirimi */}
           {loadingComments && (
-            <div className="loading-more-comments">Daha eski yorumlar yükleniyor... ⏳</div>
+            <div className="loading-more-comments">Yorumlar yükleniyor... ⏳</div>
           )}
           
-          {/* Başka yorum kalmadığında kullanıcıyı bilgilendir */}
-          {!hasMore && pollComments.length > 0 && (
+          {!hasMore && Array.isArray(pollComments) && pollComments.length > 0 && (
             <div className="no-more-comments">Tüm yorumlar yüklendi. ✔</div>
           )}
         </div>
@@ -177,13 +185,15 @@ function AnketDetay({ polls, onVote, onUpvote }) {
   );
 }
 
-// Recursive Yorum Düğümü Bileşeni (Aynen Korunuyor)
 function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setReplyInput, handleCommentSubmit }) {
+  if (!comment) return null;
+  const childList = comment.childReplies || comment.child_replies || [];
+
   return (
     <div className="comment-node-branch" style={{ width: '100%' }}>
       <div className="comment-card">
         <div className="comment-header">
-          <span className="comment-user">👤 {comment.user}</span>
+          <span className="comment-user">👤 {comment.user || 'Misafir Kullanıcı'}</span>
           <span className="comment-date">
             {comment.created_at ? new Date(comment.created_at).toLocaleDateString('tr-TR') : 'Şimdi'}
           </span>
@@ -194,7 +204,7 @@ function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setRe
 
       {replyingToId === comment.id && (
         <form onSubmit={(e) => handleCommentSubmit(e, comment.id)} className="reply-form">
-          <input type="text" placeholder={`${comment.user} kullanıcısına yanıt yaz...`} value={replyInput} onChange={(e) => setReplyInput(e.target.value)} required autoFocus />
+          <input type="text" placeholder={`${comment.user || 'Kullanıcı'} kullanıcısına yanıt yaz...`} value={replyInput} onChange={(e) => setReplyInput(e.target.value)} required autoFocus />
           <div className="reply-form-actions">
             <button type="submit" className="reply-submit-btn">Gönder</button>
             <button type="button" className="reply-cancel-btn" onClick={() => setReplyingToId(null)}>İptal</button>
@@ -202,214 +212,17 @@ function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setRe
         </form>
       )}
 
-      {((comment.childReplies && comment.childReplies.length > 0) || (comment.child_replies && comment.child_replies.length > 0)) && (
+      {childList.length > 0 && (
         <div className="replies-nested-container">
-          {(comment.childReplies || comment.child_replies).map(reply => (
-            <CommentNode key={reply.id} comment={reply} replyingToId={replyingToId} setReplyingToId={setReplyingToId} replyInput={replyInput} setReplyInput={setReplyInput} handleCommentSubmit={handleCommentSubmit} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default AnketDetay;
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-
-const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
-
-function AnketDetay({ polls, onVote, onUpvote }) {
-  const { id } = useParams();
-  const [commentInput, setCommentInput] = useState('');
-  const [pollComments, setPollComments] = useState([]);
-  const [loadingComments, setLoadingComments] = useState(true);
-
-  // Hangi yorum veya yanıta cevap yazıldığını takip eden merkezi state
-  const [replyingToId, setReplyingToId] = useState(null);
-  const [replyInput, setReplyInput] = useState('');
-
-  const poll = polls.find(p => p.id === parseInt(id));
-
-  const fetchComments = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/polls/${id}/comments`);
-      if (response.ok) {
-        const data = await response.json();
-        setPollComments(data);
-      }
-    } catch (error) {
-      console.error("Yorumlar çekilirken hata:", error);
-    } finally {
-      setLoadingComments(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchComments();
-  }, [id]);
-
-  const handleCommentSubmit = async (e, parentId = null) => {
-    e.preventDefault();
-    const text = parentId ? replyInput : commentInput;
-    if (!text.trim()) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/polls/${poll.id}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: text,
-          user: "Misafir Kullanıcı",
-          parent_id: parentId
-        })
-      });
-
-      if (response.ok) {
-        await fetchComments();
-        if (parentId) {
-          setReplyInput('');
-          setReplyingToId(null);
-        } else {
-          setCommentInput('');
-        }
-      }
-    } catch (error) {
-      console.error("Yorum kaydedilemedi:", error);
-    }
-  };
-
-  if (!poll) return <div>Anket Bulunamadı.</div>;
-
-  return (
-    <div className="anket-detay-container">
-      <Link to="/anketler" className="back-link">⬅ Anketlere Geri Dön</Link>
-
-      {/* Anket Kartı */}
-      <div className="poll-detailed-card">
-        <div className="upvote-section">
-          <button className={`upvote-btn ${poll.upvotedByMe ? 'upvoted' : ''}`} onClick={() => onUpvote(poll.id)}>🔼</button>
-          <span className="upvote-count">{poll.upvotes}</span>
-        </div>
-        <div className="poll-main-content">
-          <span className="poll-category-tag">{poll.category}</span>
-          <h2 className="poll-detailed-question">{poll.question}</h2>
-          {poll.image_path && (
-            <div className="poll-image-container">
-              <img src={poll.image_path} alt={poll.question} className="poll-main-image" />
-            </div>
-          )}
-          <div className="poll-options">
-            {poll.options.map((option, index) => {
-              const percent = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
-              return (
-                <button key={index} className={`poll-option-row ${poll.voted ? 'voted-disabled' : ''}`} onClick={() => onVote(poll.id, index)} disabled={poll.voted}>
-                  {poll.voted && <div className="progress-bar-fill" style={{ width: `${percent}%` }} />}
-                  <span className="option-text">{option.text}</span>
-                  {poll.voted && <span className="option-percent">%{percent} ({option.votes} oy)</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Yorumlar Alanı */}
-      <div className="comments-section">
-        <h3>Topluluk Yorumları ({pollComments.length})</h3>
-
-        {/* Ana Yorum Yapma Formu */}
-        <form onSubmit={(e) => handleCommentSubmit(e, null)} className="comment-form">
-          <textarea
-            placeholder="Tavsiyenizi veya düşüncenizi yazın..."
-            value={commentInput}
-            onChange={(e) => setCommentInput(e.target.value)}
-            rows="3"
-            required
-          />
-          <button type="submit" className="submit-comment-btn">Yorum Yap</button>
-        </form>
-
-        {/* Yorum Listesi */}
-        <div className="comments-list">
-  {loadingComments ? (
-    <p>Yorumlar yükleniyor... ⏳</p>
-  ) : pollComments.length === 0 ? (
-    <p>Henüz yorum yapılmamış.</p>
-  ) : (
-    pollComments.map(comment => (
-      <CommentNode 
-        key={comment.id} 
-        comment={comment}
-        replyingToId={replyingToId}
-        setReplyingToId={setReplyingToId}
-        replyInput={replyInput}
-        setReplyInput={setReplyInput}
-        handleCommentSubmit={handleCommentSubmit}
-      />
-    ))
-  )}
-</div>
-      </div>
-    </div>
-  );
-}
-
-// 🔄 SONSUZ DÖNGÜYÜ SAĞLAYAN RECURSIVE (KENDİ KENDİNİ ÇAĞIRAN) BİLEŞEN
-// 🔄 DOSYANIN EN ALTINDAKİ BİLEŞENİ BU KODLA DEĞİŞTİRİN:
-
-function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setReplyInput, handleCommentSubmit }) {
-  return (
-    <div className="comment-node-branch" style={{ width: '100%' }}>
-      {/* Aktif Yorum Kutusu */}
-      <div className="comment-card">
-        <div className="comment-header">
-          <span className="comment-user">👤 {comment.user}</span>
-          <span className="comment-date">
-            {comment.created_at ? new Date(comment.created_at).toLocaleDateString('tr-TR') : 'Şimdi'}
-          </span>
-        </div>
-        <p className="comment-text">{comment.text}</p>
-        
-        <button 
-          className="reply-trigger-btn"
-          onClick={() => setReplyingToId(replyingToId === comment.id ? null : comment.id)}
-        >
-          💬 Cevapla
-        </button>
-      </div>
-
-      {/* Cevaplama Formu */}
-      {replyingToId === comment.id && (
-        <form onSubmit={(e) => handleCommentSubmit(e, comment.id)} className="reply-form">
-          <input 
-            type="text"
-            placeholder={`${comment.user} kullanıcısına yanıt yaz...`}
-            value={replyInput}
-            onChange={(e) => setReplyInput(e.target.value)}
-            required
-            autoFocus
-          />
-          <div className="reply-form-actions">
-            <button type="submit" className="reply-submit-btn">Gönder</button>
-            <button type="button" className="reply-cancel-btn" onClick={() => setReplyingToId(null)}>İptal</button>
-          </div>
-        </form>
-      )}
-
-      {/* ⚡ KESİN ÇÖZÜM NOKTASI: child_replies veya childReplies kontrolü */}
-      {/* Laravel bazen snake_case (child_replies) bazen camelCase (childReplies) dönebilir. İkisini de kontrol ediyoruz. */}
-      {((comment.childReplies && comment.childReplies.length > 0) || (comment.child_replies && comment.child_replies.length > 0)) && (
-        <div className="replies-nested-container">
-          {(comment.childReplies || comment.child_replies).map(reply => (
+          {childList.map(reply => (
             <CommentNode 
               key={reply.id} 
-              comment={reply} // Öz yineleme: Alt yorumu tekrar kendisiyle çizmesi için içeri aktarır
-              replyingToId={replyingToId}
-              setReplyingToId={setReplyingToId}
-              replyInput={replyInput}
-              setReplyInput={setReplyInput}
-              handleCommentSubmit={handleCommentSubmit}
+              comment={reply} 
+              replyingToId={replyingToId} 
+              setReplyingToId={setReplyingToId} 
+              replyInput={replyInput} 
+              setReplyInput={setReplyInput} 
+              handleCommentSubmit={handleCommentSubmit} 
             />
           ))}
         </div>
