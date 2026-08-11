@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuth } from '../context/AuthContext';
 function SorSor() {
   const navigate = useNavigate();
   const [question, setQuestion] = useState('');
