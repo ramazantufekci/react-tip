@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
 
 const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const { id } = useParams();
   const [commentInput, setCommentInput] = useState('');
   
@@ -79,6 +80,12 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
 
   const handleCommentSubmit = async (e, parentId = null) => {
     e.preventDefault();
+     // 🌟 KRİTİK KONTROL: Kullanıcı giriş yapmamışsa engelle ve logine fırlat
+    if (!isAuthenticated) {
+      alert("Yorum yazabilmek veya yanıt verebilmek için lütfen önce giriş yapın! 🔑");
+      navigate('/login');
+      return;
+    }
     const text = parentId ? replyInput : commentInput;
     if (!text.trim()) return;
 
@@ -98,6 +105,9 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
         setCommentInput('');
         setReplyingToId(null);
         await fetchComments(1, true);
+      }else if(response.status === 401){
+        alert("Oturum süreniz dolmuş, lütfen tekrar giriş yapın.");
+        navigate('/login');
       }
     } catch (error) {
       console.error("Yorum kaydedilemedi:", error);
