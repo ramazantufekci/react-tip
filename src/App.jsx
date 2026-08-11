@@ -7,7 +7,7 @@ import Login from './components/Login'; // Giriş bileşenini içe aktarıyoruz
 import { useAuth } from './context/AuthContext'; // Auth hook'unu çağırıyoruz
 import './App.css';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
 
 function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
