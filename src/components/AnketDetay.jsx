@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from './context/AuthContext'; 
 
 const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
+  const { token } = useAuth();
   const { id } = useParams();
   const [commentInput, setCommentInput] = useState('');
   
@@ -83,7 +85,8 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
     try {
       const response = await fetch(`${API_BASE_URL}/polls/${id}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${token}`},
         body: JSON.stringify({
           text: text,
           user: "Misafir Kullanıcı",
