@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
 
 function AnketDetay({ polls, onVote, onUpvote }) {
   const { id } = useParams();
