@@ -33,7 +33,7 @@ function SorSor() {
     if (imageB) formData.append('image_b', imageB);
 
     try {
-      const response = await fetch('http://localhost:8000/api/polls', {
+      const response = await fetch('https://smarttools.kararsizkaldim.com/api/polls', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
