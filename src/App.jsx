@@ -4,7 +4,7 @@ import Anketler from './components/Anketler';
 import SorSor from './components/SorSor';
 import AnketDetay from './components/AnketDetay';
 import './App.css';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './context/AuthContext';
 
 // Laravel API'nizin temel URL adresi
 const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
