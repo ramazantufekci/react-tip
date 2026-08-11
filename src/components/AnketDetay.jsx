@@ -8,9 +8,9 @@ function AnketDetay({ polls, onVote, onUpvote }) {
   const [commentInput, setCommentInput] = useState('');
   const [pollComments, setPollComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(true);
-  
-  // Hangi yorumun altına cevap yazıldığını takip eden state (Yorum ID'sini tutar)
-  const [replyingTo, setReplyingTo] = useState(null);
+
+  // Hangi yorum veya yanıta cevap yazıldığını takip eden merkezi state
+  const [replyingToId, setReplyingToId] = useState(null);
   const [replyInput, setReplyInput] = useState('');
 
   const poll = polls.find(p => p.id === parseInt(id));
@@ -33,7 +33,6 @@ function AnketDetay({ polls, onVote, onUpvote }) {
     fetchComments();
   }, [id]);
 
-  // Ana Yorum veya Yanıt Gönderme Fonksiyonu
   const handleCommentSubmit = async (e, parentId = null) => {
     e.preventDefault();
     const text = parentId ? replyInput : commentInput;
@@ -46,18 +45,15 @@ function AnketDetay({ polls, onVote, onUpvote }) {
         body: JSON.stringify({
           text: text,
           user: "Misafir Kullanıcı",
-          parent_id: parentId // Yanıt ise ID gider, ana yorum ise null gider
+          parent_id: parentId
         })
       });
 
       if (response.ok) {
-        // En temiz yöntem listeyi veritabanından güncel haliyle yeniden çekmektir
         await fetchComments();
-        
-        // Formları temizle
         if (parentId) {
           setReplyInput('');
-          setReplyingTo(null);
+          setReplyingToId(null);
         } else {
           setCommentInput('');
         }
@@ -73,7 +69,7 @@ function AnketDetay({ polls, onVote, onUpvote }) {
     <div className="anket-detay-container">
       <Link to="/anketler" className="back-link">⬅ Anketlere Geri Dön</Link>
 
-      {/* Anket Kartı Alanı */}
+      {/* Anket Kartı */}
       <div className="poll-detailed-card">
         <div className="upvote-section">
           <button className={`upvote-btn ${poll.upvotedByMe ? 'upvoted' : ''}`} onClick={() => onUpvote(poll.id)}>🔼</button>
@@ -102,11 +98,11 @@ function AnketDetay({ polls, onVote, onUpvote }) {
         </div>
       </div>
 
-      {/* Yorumlar ve Yanıtlar Bölümü */}
+      {/* Yorumlar Alanı */}
       <div className="comments-section">
-        <h3>Topluluk Yorumları</h3>
+        <h3>Topluluk Yorumları ({pollComments.length})</h3>
 
-        {/* Ana Yorum Formu */}
+        {/* Ana Yorum Yapma Formu */}
         <form onSubmit={(e) => handleCommentSubmit(e, null)} className="comment-form">
           <textarea
             placeholder="Tavsiyenizi veya düşüncenizi yazın..."
@@ -118,70 +114,88 @@ function AnketDetay({ polls, onVote, onUpvote }) {
           <button type="submit" className="submit-comment-btn">Yorum Yap</button>
         </form>
 
-        {/* Yorum Ağacı Listesi */}
+        {/* Yorum Listesi */}
         <div className="comments-list">
           {loadingComments ? (
             <p>Yorumlar yükleniyor... ⏳</p>
           ) : pollComments.length === 0 ? (
             <p>Henüz yorum yapılmamış.</p>
           ) : (
+            // Ana yorumları döngüye sokuyoruz
             pollComments.map(comment => (
-              <div key={comment.id} className="comment-branch">
-                
-                {/* Ana Yorum Kutusu */}
-                <div className="comment-card">
-                  <div className="comment-header">
-                    <span className="comment-user">👤 {comment.user}</span>
-                    <span className="comment-date">{new Date(comment.created_at).toLocaleDateString('tr-TR')}</span>
-                  </div>
-                  <p className="comment-text">{comment.text}</p>
-                  
-                  <button 
-                    className="reply-trigger-btn"
-                    onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                  >
-                    💬 Cevapla
-                  </button>
-                </div>
-
-                {/* Dinamik Yanıt Verme Formu (Sadece tıklanan yorumun altında açılır) */}
-                {replyingTo === comment.id && (
-                  <form onSubmit={(e) => handleCommentSubmit(e, comment.id)} className="reply-form">
-                    <input 
-                      type="text"
-                      placeholder={`${comment.user} kullanıcısına yanıt ver...`}
-                      value={replyInput}
-                      onChange={(e) => setReplyInput(e.target.value)}
-                      required
-                      autoFocus
-                    />
-                    <div className="reply-form-actions">
-                      <button type="submit" className="reply-submit-btn">Gönder</button>
-                      <button type="button" className="reply-cancel-btn" onClick={() => setReplyingTo(null)}>İptal</button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Alt Yanıtların Listelendiği Alan (Replies) */}
-                {comment.replies && comment.replies.length > 0 && (
-                  <div className="replies-container">
-                    {comment.replies.map(reply => (
-                      <div key={reply.id} className="reply-card">
-                        <div className="comment-header">
-                          <span className="comment-user">↩ {reply.user}</span>
-                          <span className="comment-date">{new Date(reply.created_at).toLocaleDateString('tr-TR')}</span>
-                        </div>
-                        <p className="comment-text">{reply.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-              </div>
+              <CommentNode 
+                key={comment.id} 
+                comment={comment}
+                replyingToId={replyingToId}
+                setReplyingToId={setReplyingToId}
+                replyInput={replyInput}
+                setReplyInput={setReplyInput}
+                handleCommentSubmit={handleCommentSubmit}
+              />
             ))
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// 🔄 SONSUZ DÖNGÜYÜ SAĞLAYAN RECURSIVE (KENDİ KENDİNİ ÇAĞIRAN) BİLEŞEN
+function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setReplyInput, handleCommentSubmit }) {
+  return (
+    <div className="comment-node-branch">
+      {/* Aktif Yorum Kutusu */}
+      <div className="comment-card">
+        <div className="comment-header">
+          <span className="comment-user">👤 {comment.user}</span>
+          <span className="comment-date">{new Date(comment.created_at).toLocaleDateString('tr-TR')}</span>
+        </div>
+        <p className="comment-text">{comment.text}</p>
+        
+        {/* Her katmandaki yorum/yanıt için dinamik cevapla tetikleyici butonu */}
+        <button 
+          className="reply-trigger-btn"
+          onClick={() => setReplyingToId(replyingToId === comment.id ? null : comment.id)}
+        >
+          💬 Cevapla
+        </button>
+      </div>
+
+      {/* Tıklanan yoruma özel açılan form */}
+      {replyingToId === comment.id && (
+        <form onSubmit={(e) => handleCommentSubmit(e, comment.id)} className="reply-form">
+          <input 
+            type="text"
+            placeholder={`${comment.user} kullanıcısına yanıt yaz...`}
+            value={replyInput}
+            onChange={(e) => setReplyInput(e.target.value)}
+            required
+            autoFocus
+          />
+          <div className="reply-form-actions">
+            <button type="submit" className="reply-submit-btn">Gönder</button>
+            <button type="button" className="reply-cancel-btn" onClick={() => setReplyingToId(null)}>İptal</button>
+          </div>
+        </form>
+      )}
+
+      {/* 💥 Sihirli Kısım: Eğer bu yorumun altında da replies (yanıtlar) varsa,
+          CommentNode bileşeni kendisini tekrar çağırarak hiyerarşiyi sonsuza kadar uzatır */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="replies-nested-container">
+          {comment.replies.map(reply => (
+            <CommentNode 
+              key={reply.id} 
+              comment={reply} // Alt yanıtı ana yorummuş gibi içeri paslar
+              replyingToId={replyingToId}
+              setReplyingToId={setReplyingToId}
+              replyInput={replyInput}
+              setReplyInput={setReplyInput}
+              handleCommentSubmit={handleCommentSubmit}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
