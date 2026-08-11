@@ -531,3 +531,67 @@ body {
   background: #e2f0d9;
 }
 
+/* Navbar Yerleşimi */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.nav-links-left {
+  display: flex;
+  gap: 12px;
+}
+
+.nav-auth-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Oturum Açmış Kullanıcı Alanı */
+.user-profile-menu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.welcome-text {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Çıkış Yap Butonu */
+.logout-btn {
+  background-color: #fff;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* Giriş Butonunu Vurgulama */
+.auth-nav-btn {
+  background-color: #f8f9fa;
+  border: 1px solid #007bff !important;
+  color: #007bff !important;
+}
+
+.auth-nav-btn.active, .auth-nav-btn:hover {
+  background-color: #007bff !important;
+  color: #fff !important;
+}
