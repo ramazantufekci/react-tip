@@ -116,43 +116,45 @@ function AnketDetay({ polls, onVote, onUpvote }) {
 
         {/* Yorum Listesi */}
         <div className="comments-list">
-          {loadingComments ? (
-            <p>Yorumlar yükleniyor... ⏳</p>
-          ) : pollComments.length === 0 ? (
-            <p>Henüz yorum yapılmamış.</p>
-          ) : (
-            // Ana yorumları döngüye sokuyoruz
-            pollComments.map(comment => (
-              <CommentNode 
-                key={comment.id} 
-                comment={comment}
-                replyingToId={replyingToId}
-                setReplyingToId={setReplyingToId}
-                replyInput={replyInput}
-                setReplyInput={setReplyInput}
-                handleCommentSubmit={handleCommentSubmit}
-              />
-            ))
-          )}
-        </div>
+  {loadingComments ? (
+    <p>Yorumlar yükleniyor... ⏳</p>
+  ) : pollComments.length === 0 ? (
+    <p>Henüz yorum yapılmamış.</p>
+  ) : (
+    pollComments.map(comment => (
+      <CommentNode 
+        key={comment.id} 
+        comment={comment}
+        replyingToId={replyingToId}
+        setReplyingToId={setReplyingToId}
+        replyInput={replyInput}
+        setReplyInput={setReplyInput}
+        handleCommentSubmit={handleCommentSubmit}
+      />
+    ))
+  )}
+</div>
       </div>
     </div>
   );
 }
 
 // 🔄 SONSUZ DÖNGÜYÜ SAĞLAYAN RECURSIVE (KENDİ KENDİNİ ÇAĞIRAN) BİLEŞEN
+// 🔄 DOSYANIN EN ALTINDAKİ BİLEŞENİ BU KODLA DEĞİŞTİRİN:
+
 function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setReplyInput, handleCommentSubmit }) {
   return (
-    <div className="comment-node-branch">
+    <div className="comment-node-branch" style={{ width: '100%' }}>
       {/* Aktif Yorum Kutusu */}
       <div className="comment-card">
         <div className="comment-header">
           <span className="comment-user">👤 {comment.user}</span>
-          <span className="comment-date">{new Date(comment.created_at).toLocaleDateString('tr-TR')}</span>
+          <span className="comment-date">
+            {comment.created_at ? new Date(comment.created_at).toLocaleDateString('tr-TR') : 'Şimdi'}
+          </span>
         </div>
         <p className="comment-text">{comment.text}</p>
         
-        {/* Her katmandaki yorum/yanıt için dinamik cevapla tetikleyici butonu */}
         <button 
           className="reply-trigger-btn"
           onClick={() => setReplyingToId(replyingToId === comment.id ? null : comment.id)}
@@ -161,7 +163,7 @@ function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setRe
         </button>
       </div>
 
-      {/* Tıklanan yoruma özel açılan form */}
+      {/* Cevaplama Formu */}
       {replyingToId === comment.id && (
         <form onSubmit={(e) => handleCommentSubmit(e, comment.id)} className="reply-form">
           <input 
@@ -179,22 +181,23 @@ function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setRe
         </form>
       )}
 
-      {/* 💥 Güncellenen Sihirli Kısım: comment.replies yerine comment.childReplies kullanıyoruz */}
-{comment.childReplies && comment.childReplies.length > 0 && (
-  <div className="replies-nested-container">
-    {comment.childReplies.map(reply => (
-      <CommentNode 
-        key={reply.id} 
-        comment={reply} // Alt yanıtı içeri aktarır (Sonsuz derinlik tetiklenir)
-        replyingToId={replyingToId}
-        setReplyingToId={setReplyingToId}
-        replyInput={replyInput}
-        setReplyInput={setReplyInput}
-        handleCommentSubmit={handleCommentSubmit}
-      />
-    ))}
-  </div>
-)}
+      {/* ⚡ KESİN ÇÖZÜM NOKTASI: child_replies veya childReplies kontrolü */}
+      {/* Laravel bazen snake_case (child_replies) bazen camelCase (childReplies) dönebilir. İkisini de kontrol ediyoruz. */}
+      {((comment.childReplies && comment.childReplies.length > 0) || (comment.child_replies && comment.child_replies.length > 0)) && (
+        <div className="replies-nested-container">
+          {(comment.childReplies || comment.child_replies).map(reply => (
+            <CommentNode 
+              key={reply.id} 
+              comment={reply} // Öz yineleme: Alt yorumu tekrar kendisiyle çizmesi için içeri aktarır
+              replyingToId={replyingToId}
+              setReplyingToId={setReplyingToId}
+              replyInput={replyInput}
+              setReplyInput={setReplyInput}
+              handleCommentSubmit={handleCommentSubmit}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
