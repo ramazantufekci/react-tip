@@ -12,7 +12,7 @@ function App() {
   const [polls, setPolls] = useState([]);
   const [comments, setComments] = useState({});
   const [loading, setLoading] = useState(true);
-
+  const { token } = useAuth();
   // 1. ADIM: useEffect ile Verileri Laravel'den Çekme
   useEffect(() => {
     const fetchPolls = async () => {
@@ -47,7 +47,8 @@ function App() {
       // Laravel tarafında kuracağınız '/polls/{id}/vote' ucuna istek atıyoruz
       const response = await fetch(`${API_BASE_URL}/polls/${pollId}/vote`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${token}`},
         body: JSON.stringify({ option_index: optionIndex })
       });
 
@@ -78,7 +79,8 @@ function App() {
       // Laravel tarafındaki upvote ucuna istek atıyoruz
       const response = await fetch(`${API_BASE_URL}/polls/${pollId}/upvote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${token}`},
         body: JSON.stringify({ action: actionType }) // Laravel'e ne yapacağını söylüyoruz
       });
 
@@ -106,7 +108,8 @@ function App() {
       // Gelecekte Laravel'de hazırlayacağınız yorum ucu için şablon
       const response = await fetch(`${API_BASE_URL}/polls/${pollId}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${token}`},
         body: JSON.stringify({ text: commentText, user: "Misafir Kullanıcı" })
       });
 
