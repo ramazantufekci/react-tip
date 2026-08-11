@@ -428,8 +428,9 @@ body {
   object-fit: cover;
 }
 
-.comment-branch {
-  margin-bottom: 20px;
+.comment-node-branch {
+  margin-top: 12px;
+  position: relative;
 }
 
 .reply-trigger-btn {
@@ -489,6 +490,21 @@ body {
   border-left: 2px dashed #ced4da;
   padding-left: 15px;
   margin-top: 10px;
+}
+/* İç içe giren her katmanı sağa doğru öteler ve soluna çizgi çeker */
+.replies-nested-container {
+  margin-left: 20px; 
+  border-left: 2px solid #e9ecef; /* Reddit tarzı dikey hiyerarşi çizgisi */
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* Yanıtların kutu tasarımlarını biraz daha kompakt yapalım */
+.replies-nested-container .comment-card {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  padding: 8px 12px;
 }
 
 .reply-card {
