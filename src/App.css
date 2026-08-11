@@ -514,4 +514,20 @@ body {
   border-radius: 8px;
   margin-bottom: 8px;
 }
+.loading-more-comments, 
+.no-more-comments {
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.no-more-comments {
+  color: #28a745;
+  background: #e2f0d9;
+}
 
