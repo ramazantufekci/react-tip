@@ -211,7 +211,7 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
   })}
 </div>
 
-          <p className="total-votes-summary">Toplam kullanılan oy sayısı: <strong>{poll.totalVotes ?? 0}</strong></p>
+          <p className="total-votes-summary">Toplam kullanılan oy sayısı: <strong>{poll.total_votes ?? 0}</strong></p>
         </div>
       </div>
 
