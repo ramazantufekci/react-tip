@@ -499,3 +499,21 @@ body {
     padding-left: 14px;
   }
 }
+/* src/App.css */
+
+.resimli-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Mobilde varsayılan tek sütun */
+  gap: 16px;
+  margin: 16px 0;
+}
+
+@media (min-width: 576px) {
+  /* Ekran büyüdüğünde şıkları otomatik sığdırır (auto-fit). 
+     Kutular en az 240px genişliğinde olacak şekilde yan yana dizilirler. */
+  .resimli-comparison-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+}
+
