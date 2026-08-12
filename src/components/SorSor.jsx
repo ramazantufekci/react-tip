@@ -66,29 +66,29 @@ function SorSor() {
           <input type="text" placeholder="Örn: Moda, Alışveriş" value={category} onChange={e => setCategory(e.target.value)} required />
         </div>
 
-        {/* SEÇENEK A VE RESMİ */}
-        <div className="option-upload-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-          <div className="form-group">
-            <label>1. Seçenek (A Şıkkı) Metni</label>
-            <input type="text" placeholder="Örn: Beyaz Sneaker" value={optionA} onChange={e => setOptionA(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>A Şıkkı İçin Resim (Opsiyonel)</label>
-            <input type="file" accept="image/*" onChange={e => setImageA(e.target.files[0])} />
-          </div>
-        </div>
+        {{/* SEÇENEK A BLOK */}
+<div className="option-upload-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+  <div className="form-group">
+    <label>1. Seçenek Metni (Resim varsa boş kalabilir)</label>
+    <input type="text" placeholder="Örn: Beyaz Sneaker" value={optionA} onChange={e => setOptionA(e.target.value)} />
+  </div>
+  <div className="form-group">
+    <label>A Şıkkı İçin Resim</label>
+    <input type="file" accept="image/*" onChange={e => setImageA(e.target.files[0])} />
+  </div>
+</div>
 
-        {/* SEÇENEK B VE RESMİ */}
-        <div className="option-upload-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-          <div className="form-group">
-            <label>2. Seçenek (B Şıkkı) Metni</label>
-            <input type="text" placeholder="Örn: Siyah Bot" value={optionB} onChange={e => setOptionB(e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>B Şıkkı İçin Resim (Opsiyonel)</label>
-            <input type="file" accept="image/*" onChange={e => setImageB(e.target.files[0])} />
-          </div>
-        </div>
+{/* SEÇENEK B BLOK */}
+<div className="option-upload-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+  <div className="form-group">
+    <label>2. Seçenek Metni (Resim varsa boş kalabilir)</label>
+    <input type="text" placeholder="Örn: Siyah Bot" value={optionB} onChange={e => setOptionB(e.target.value)} />
+  </div>
+  <div className="form-group">
+    <label>B Şıkkı İçin Resim</label>
+    <input type="file" accept="image/*" onChange={e => setImageB(e.target.files[0])} />
+  </div>
+</div>
 
         <button type="submit" className="submit-poll-btn" disabled={loading}>
           {loading ? "Yükleniyor..." : "Kıyaslama Anketini Başlat 🚀"}
