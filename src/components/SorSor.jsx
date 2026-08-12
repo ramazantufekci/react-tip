@@ -66,7 +66,7 @@ function SorSor() {
           <input type="text" placeholder="Örn: Moda, Alışveriş" value={category} onChange={e => setCategory(e.target.value)} required />
         </div>
 
-        {{/* SEÇENEK A BLOK */}
+        {/* SEÇENEK A BLOK */}
 <div className="option-upload-block" style={{ border: '1px solid #eee', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
   <div className="form-group">
     <label>1. Seçenek Metni (Resim varsa boş kalabilir)</label>
