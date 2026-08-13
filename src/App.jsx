@@ -1,5 +1,12 @@
 // src/App.jsx
-
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import Anketler from './components/Anketler';
+import SorSor from './components/SorSor';
+import AnketDetay from './components/AnketDetay';
+import Login from './components/Login'; // Giriş bileşenini içe aktarıyoruz
+import { useAuth } from './context/AuthContext'; // Auth hook'unu çağırıyoruz
+import './App.css';
 // En üstte API_BASE_URL'i merkezi dosyadan aldığınızdan emin olun
 import { API_BASE_URL } from './config'; 
 
