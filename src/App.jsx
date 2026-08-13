@@ -12,7 +12,7 @@ function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [sortBy, setSortBy] = useState('latest'); 
   const [myVotes, setMyVotes] = useState(() => {
     const savedVotes = localStorage.getItem('my_votes');
     return savedVotes ? JSON.parse(savedVotes) : [];
@@ -24,9 +24,9 @@ function App() {
   });
 
   // Anketleri API'den çeken merkezi fonksiyon
-  const fetchPolls = async () => {
+  const fetchPolls = async (currentSort = sortBy) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/polls`);
+      const response = await fetch(`${API_BASE_URL}/polls?sort=${currentSort}`);
       if (response.ok) {
         const data = await response.json();
         const formattedPolls = data.map(poll => ({
@@ -44,10 +44,10 @@ function App() {
     }
   };
 
-  // İlk yüklemede ve oylama durumları değiştiğinde listeyi yenile
+  // Filtre veya oylar değiştikçe listeyi tazeleyin
   useEffect(() => {
-    fetchPolls();
-  }, [myVotes, myUpvotes]);
+    fetchPolls(sortBy);
+  }, [myVotes, myUpvotes, sortBy]);[myVotes, myUpvotes]);
 
   // Oy verme işlemi
   const handleVote = async (pollId, optionIndex) => {
@@ -148,7 +148,7 @@ function App() {
         <main className="content">
           <Routes>
             <Route path="/" element={<Navigate to="/anketler" replace />} />
-            <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
+             <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy}/>} />
             <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
             <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace />} />
