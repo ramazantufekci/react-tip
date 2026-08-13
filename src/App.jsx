@@ -6,8 +6,7 @@ import AnketDetay from './components/AnketDetay';
 import Login from './components/Login'; // Giriş bileşenini içe aktarıyoruz
 import { useAuth } from './context/AuthContext'; // Auth hook'unu çağırıyoruz
 import './App.css';
-
-const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
+import { API_BASE_URL } from './config'; 
 
 function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
