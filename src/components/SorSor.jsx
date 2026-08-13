@@ -71,7 +71,7 @@ function SorSor() {
     });
 
     try {
-      const response = await fetch('${API_BASE_URL}/polls', {
+      const response = await fetch(`${API_BASE_URL}/polls`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData // Multipart form verisi gönderiliyor
