@@ -116,7 +116,8 @@ function App() {
             {/* 🌟 2. DEĞİŞİKLİK: SorSor bileşenine onPollCreated prop'u ile fonksiyonu paslıyoruz */}
             <Route 
               path="/sor-sor" 
-              element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace /> 
+              element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace />} 
+            />
           </Routes>
         </main>
       </div>
