@@ -117,7 +117,6 @@ function App() {
             <Route 
               path="/sor-sor" 
               element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace /> 
-            />
           </Routes>
         </main>
       </div>
