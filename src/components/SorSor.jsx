@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
+import { API_BASE_URL } from '../config'; 
 function SorSor() {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -71,7 +71,7 @@ function SorSor() {
     });
 
     try {
-      const response = await fetch('http://localhost:8000/api/polls', {
+      const response = await fetch('${API_BASE_URL}/polls', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData // Multipart form verisi gönderiliyor
