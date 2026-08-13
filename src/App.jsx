@@ -50,7 +50,24 @@ function App() {
   useEffect(() => {
     fetchPolls();
   }, [myVotes, myUpvotes]);
+  // Upvote işlemi (Token korumalı)
+  const handleUpvote = async (pollId) => {
+    if (!isAuthenticated) {
+      alert("Yukarı taşıma işlemi için lütfen giriş yapın!");
+      return;
+    }
+    const isAlreadyUpvoted = myUpvotes.includes(pollId);
+    const actionType = isAlreadyUpvoted ? 'remove' : 'add';
 
+    try {
+      const response = await fetch(`${API_BASE_URL}/polls/${pollId}/upvote`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ action: actionType })
+      });
   // handleVote ve handleUpvote kodları aynen kalıyor...
 
   if (authLoading || loading) return <div className="loading-screen">Oturum kontrol ediliyor... ⏳</div>;
@@ -58,6 +75,35 @@ function App() {
   return (
     <BrowserRouter>
       <div className="app-container">
+        <header className="header">
+          <h1>://kararsizkaldim.com</h1>
+          <p>Her Konuda İkilemlerinizi Topluluk Çözüyor ve Oyluyor 🌐</p>
+        </header>
+
+        {/* 🌟 GÜNCELLENEN DİNAMİK NAVBAR YAPISI */}
+        <nav className="navbar">
+          <div className="nav-links-left">
+            <NavLink to="/anketler" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
+              Anketleri Oyla
+            </NavLink>
+            <NavLink to="/sor-sor" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
+              Kararsız Kaldım?
+            </NavLink>
+          </div>
+
+          <div className="nav-auth-right">
+            {isAuthenticated ? (
+              <div className="user-profile-menu">
+                <span className="welcome-text">Hoş geldin, <strong>{user?.name}</strong> 👋</span>
+                <button onClick={logout} className="logout-btn">Çıkış Yap</button>
+              </div>
+            ) : (
+              <NavLink to="/login" className={({ isActive }) => `nav-btn auth-nav-btn ${isActive ? 'active' : ''}`}>
+                Giriş Yap / Üye Ol
+              </NavLink>
+            )}
+          </div>
+        </nav>
         {/* Header ve Navbar alanları aynen kalıyor... */}
 
         <main className="content">
