@@ -1,8 +1,7 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
-
+import { API_BASE_URL } from '../config'; 
 const AuthContext = createContext(null);
-const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
