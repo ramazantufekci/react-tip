@@ -1,14 +1,12 @@
-// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import Anketler from './components/Anketler';
 import SorSor from './components/SorSor';
 import AnketDetay from './components/AnketDetay';
-import Login from './components/Login'; // Giriş bileşenini içe aktarıyoruz
-import { useAuth } from './context/AuthContext'; // Auth hook'unu çağırıyoruz
+import Login from './components/Login'; 
+import { useAuth } from './context/AuthContext'; 
+import { API_BASE_URL } from './config'; // Merkezi URL dosyanız
 import './App.css';
-// En üstte API_BASE_URL'i merkezi dosyadan aldığınızdan emin olun
-import { API_BASE_URL } from './config'; 
 
 function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
@@ -25,7 +23,7 @@ function App() {
     return savedUpvotes ? JSON.parse(savedUpvotes) : [];
   });
 
-  // 🌟 1. DEĞİŞİKLİK: fetchPolls fonksiyonunu useEffect dışına çıkartıp bağımsız yapıyoruz
+  // Anketleri API'den çeken merkezi fonksiyon
   const fetchPolls = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/polls`);
@@ -46,11 +44,40 @@ function App() {
     }
   };
 
-  // Sayfa ilk açıldığında veya oylarım değiştiğinde tetiklenir
+  // İlk yüklemede ve oylama durumları değiştiğinde listeyi yenile
   useEffect(() => {
     fetchPolls();
   }, [myVotes, myUpvotes]);
-  // Upvote işlemi (Token korumalı)
+
+  // Oy verme işlemi
+  const handleVote = async (pollId, optionIndex) => {
+    if (!isAuthenticated) {
+      alert("Oy kullanabilmek için lütfen giriş yapın!");
+      return;
+    }
+    if (myVotes.includes(pollId)) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/polls/${pollId}/vote`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ option_index: optionIndex })
+      });
+
+      if (response.ok) {
+        const updatedVotes = [...myVotes, pollId];
+        setMyVotes(updatedVotes);
+        localStorage.setItem('my_votes', JSON.stringify(updatedVotes));
+      }
+    } catch (error) {
+      console.error("Oy verilemedi:", error);
+    }
+  };
+
+  // Upvote işlemi
   const handleUpvote = async (pollId) => {
     if (!isAuthenticated) {
       alert("Yukarı taşıma işlemi için lütfen giriş yapın!");
@@ -68,9 +95,23 @@ function App() {
         },
         body: JSON.stringify({ action: actionType })
       });
-  // handleVote ve handleUpvote kodları aynen kalıyor...
 
-  if (authLoading || loading) return <div className="loading-screen">Oturum kontrol ediliyor... ⏳</div>;
+      if (response.ok) {
+        let updatedUpvotes = isAlreadyUpvoted 
+          ? myUpvotes.filter(id => id !== pollId) 
+          : [...myUpvotes, pollId];
+        
+        setMyUpvotes(updatedUpvotes);
+        localStorage.setItem('my_upvotes', JSON.stringify(updatedUpvotes));
+      }
+    } catch (error) {
+      console.error("Upvote hatası:", error);
+    }
+  };
+
+  if (authLoading || loading) {
+    return <div className="loading-screen">Oturum kontrol ediliyor... ⏳</div>;
+  }
 
   return (
     <BrowserRouter>
@@ -80,7 +121,6 @@ function App() {
           <p>Her Konuda İkilemlerinizi Topluluk Çözüyor ve Oyluyor 🌐</p>
         </header>
 
-        {/* 🌟 GÜNCELLENEN DİNAMİK NAVBAR YAPISI */}
         <nav className="navbar">
           <div className="nav-links-left">
             <NavLink to="/anketler" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}>
@@ -104,7 +144,6 @@ function App() {
             )}
           </div>
         </nav>
-        {/* Header ve Navbar alanları aynen kalıyor... */}
 
         <main className="content">
           <Routes>
@@ -112,12 +151,7 @@ function App() {
             <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
             <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
-            
-            {/* 🌟 2. DEĞİŞİKLİK: SorSor bileşenine onPollCreated prop'u ile fonksiyonu paslıyoruz */}
-            <Route 
-              path="/sor-sor" 
-              element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace />} 
-            />
+            <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace />} />
           </Routes>
         </main>
       </div>
