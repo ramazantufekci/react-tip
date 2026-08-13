@@ -47,7 +47,7 @@ function App() {
   // Filtre veya oylar değiştikçe listeyi tazeleyin
   useEffect(() => {
     fetchPolls(sortBy);
-  }, [myVotes, myUpvotes, sortBy]);[myVotes, myUpvotes]);
+  }, [myVotes, myUpvotes, sortBy]);
 
   // Oy verme işlemi
   const handleVote = async (pollId, optionIndex) => {
