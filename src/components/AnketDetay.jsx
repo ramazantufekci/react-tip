@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
-
-const API_BASE_URL = 'https://smarttools.kararsizkaldim.com/api';
+import { API_BASE_URL } from '../config'; 
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
   const { token, isAuthenticated } = useAuth();
