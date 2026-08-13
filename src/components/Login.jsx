@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config'; 
 
 function Login() {
   const { login } = useAuth();
@@ -16,7 +17,7 @@ function Login() {
     const endpoint = isRegister ? 'register' : 'login';
 
     try {
-      const response = await fetch(`https://smarttools.kararsizkaldim.com/api/${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
