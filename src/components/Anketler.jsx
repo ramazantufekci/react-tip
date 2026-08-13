@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-function Anketler({ polls, onVote, onUpvote }) {
+function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy }) {
   const [selectedCategory, setSelectedCategory] = useState('Tümü');
 
   // 1. Adım: Mevcut anketlerden benzersiz kategorileri çıkaralım (Filtre butonları için)
@@ -19,6 +19,11 @@ function Anketler({ polls, onVote, onUpvote }) {
     <div className="anketler-container">
       {/* Kategori Filtreleme Menüsü */}
       <div className="category-filter-bar">
+        <button 
+          className={`category-btn ${sortBy === 'latest' ? 'active' : ''}`}
+          onClick={() => setSortBy('latest')}
+        >
+      <div className="category-filter-bar">
         {categories.map(category => (
           <button
             key={category}
@@ -29,7 +34,21 @@ function Anketler({ polls, onVote, onUpvote }) {
           </button>
         ))}
       </div>
-
+    ✨ En Yeni
+        </button>
+        <button 
+          className={`category-btn ${sortBy === 'upvotes' ? 'active' : ''}`}
+          onClick={() => setSortBy('upvotes')}
+        >
+          🔥 En Beğenilenler
+        </button>
+        <button 
+          className={`category-btn ${sortBy === 'votes' ? 'active' : ''}`}
+          onClick={() => setSortBy('votes')}
+        >
+          📊 En Çok Oy Alanlar
+        </button>
+      </div>
       {/* Anket Listesi */}
       <div className="polls-list">
         {sortedPolls.length === 0 ? (
