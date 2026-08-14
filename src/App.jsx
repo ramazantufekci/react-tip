@@ -9,6 +9,7 @@ import { API_BASE_URL } from './config'; // Merkezi URL dosyanız
 import Swal from 'sweetalert2';
 import './App.css';
 import Profil from './components/Profil';
+import Ayarlar from './components/Ayarlar';
 
 function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
@@ -224,6 +225,7 @@ function App() {
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
             <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace />} />
             <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} /> : <Navigate to="/login" replace />}/>
+            <Route path="/ayarlar" element={isAuthenticated ? <Ayarlar /> : <Navigate to="/login" replace />}/>
           </Routes>
         </main>
       </div>
