@@ -144,8 +144,7 @@ function App() {
     cancelButtonColor: '#6c757d',
     confirmButtonText: 'Evet, Sil!',
     cancelButtonText: 'Vazgeç',
-    background: '#ffffff',
-    borderRadius: '12px'
+    background: '#ffffff'
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
