@@ -54,7 +54,6 @@ function App() {
     fetchPolls(sortBy);
   }, [myVotes, myUpvotes, sortBy]);
 
-  // Oy verme işlemi
   const handleVote = async (pollId, optionIndex) => {
     if (!isAuthenticated) {
       Swal.fire({
@@ -96,7 +95,6 @@ function App() {
     }
   };
 
-  // Upvote işlemi
   const handleUpvote = async (pollId) => {
     if (!isAuthenticated) {
       Swal.fire({
@@ -133,7 +131,6 @@ function App() {
     }
   };
 
-  // Silme işlemi
   const handleDeletePoll = async (pollId) => {
     Swal.fire({
       title: 'Emin misiniz?',
@@ -173,74 +170,82 @@ function App() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex justify-center items-center min-height-screen min-h-screen text-lg font-medium text-gray-500 bg-gray-50">
+      <div className="flex justify-center items-center min-h-screen text-lg font-medium text-gray-500 bg-gray-50">
         Oturum kontrol ediliyor... ⏳
       </div>
     );
   }
 
-  // NavLink aktiflik durumunu Tailwind sınıflarıyla yöneten yardımcı fonksiyon
   const navLinkClass = ({ isActive }) => 
-    `px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 text-center flex-1 sm:flex-none ${
+    `px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 text-center flex-1 sm:flex-none ${
       isActive 
-        ? 'bg-blue-50 text-blue-600 border border-blue-100' 
+        ? 'bg-blue-600 text-white shadow-sm border border-blue-600' 
         : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
     }`;
 
   return (
     <BrowserRouter>
-      {/* Kapsayıcı Container */}
-      <div className="w-full max-w-4xl mx-auto px-4 py-6">
-        
-        {/* Modern Header Alanı */}
-        <header className="text-center py-6 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl mb-4 shadow-sm">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1">://kararsizkaldim.com</h1>
-          <p className="text-xs sm:text-sm text-blue-100 opacity-90">Her Konuda İkilemlerinizi Topluluk Çözüyor ve Oyluyor 🌐</p>
-        </header>
+      {/* Arka planı hafif gri ton yaparak masaüstünde kartları belirginleştiriyoruz */}
+      <div className="w-full min-h-screen bg-gray-50/50 antialiased">
+        <div className="w-full max-w-6xl mx-auto px-4 py-6">
+          
+          {/* Üst Logo ve Slogan Alanı */}
+          <header className="flex flex-col sm:flex-row justify-between items-center py-5 px-6 bg-white border border-gray-200 rounded-2xl mb-4 shadow-sm">
+            <div className="text-center sm:text-left mb-3 sm:mb-0">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-blue-600">://kararsizkaldim.com</h1>
+              <p className="text-xs text-gray-500 mt-0.5">Topluluğun Ortak Aklı İle İkilemlere Son 🌐</p>
+            </div>
+            {/* Masaüstünde hızlı istatistik rozeti */}
+            <div className="hidden md:flex gap-4 text-xs font-semibold text-gray-500 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+              <span>📊 Toplam Anket: {polls.length}</span>
+              <span>🔥 Canlı Oylama Aktif</span>
+            </div>
+          </header>
 
-        {/* Responsive Navbar */}
-        <nav className="flex flex-col sm:flex-row gap-3 bg-white p-3 rounded-2xl border border-gray-200 mb-6 shadow-sm justify-between items-center">
-          <div className="flex gap-2 w-full sm:w-auto">
-            <NavLink to="/anketler" className={navLinkClass}>Anketleri Oyla</NavLink>
-            <NavLink to="/sor-sor" className={navLinkClass}>Kararsız Kaldım?</NavLink>
-          </div>
+          {/* Menü Barı */}
+          <nav className="flex flex-col sm:flex-row gap-3 bg-white p-2.5 rounded-2xl border border-gray-200 mb-6 shadow-sm justify-between items-center">
+            <div className="flex gap-1.5 w-full sm:w-auto">
+              <NavLink to="/anketler" className={navLinkClass}>Anketleri Oyla</NavLink>
+              <NavLink to="/sor-sor" className={navLinkClass}>Kararsız Kaldım?</NavLink>
+            </div>
 
-          <div className="w-full sm:w-auto flex justify-end">
-            {isAuthenticated ? (
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                <NavLink to="/profil" className={navLinkClass}>
-                  👤 Profilim (<strong>{user?.name}</strong>)
-                </NavLink>
-                <button 
-                  onClick={logout} 
-                  className="px-4 py-2 text-sm font-bold text-red-500 border border-red-200 hover:bg-red-50 rounded-lg transition-all duration-200"
+            <div className="w-full sm:w-auto flex justify-end">
+              {isAuthenticated ? (
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                  <NavLink to="/profil" className={navLinkClass}>
+                    👤 Profilim (<strong>{user?.name}</strong>)
+                  </NavLink>
+                  <button 
+                    onClick={logout} 
+                    className="px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition"
+                  >
+                    Çıkış Yap
+                  </button>
+                </div>
+              ) : (
+                <NavLink 
+                  to="/login" 
+                  className="w-full sm:w-auto text-center px-5 py-2 text-sm font-bold border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition"
                 >
-                  Çıkış Yap
-                </button>
-              </div>
-            ) : (
-              <NavLink 
-                to="/login" 
-                className={({ isActive }) => `w-full sm:w-auto text-center px-4 py-2 text-sm font-semibold border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all ${isActive ? 'bg-blue-50' : ''}`}
-              >
-                Giriş Yap / Üye Ol
-              </NavLink>
-            )}
-          </div>
-        </nav>
+                  Giriş Yap / Üye Ol
+                </NavLink>
+              )}
+            </div>
+          </nav>
 
-        {/* Ana İçerik Bölümü */}
-        <main className="min-h-[500px]">
-          <Routes>
-            <Route path="/" element={<Navigate to="/anketler" replace />} />
-            <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy} fetchPolls={fetchPolls} onDeletePoll={handleDeletePoll} />} />
-            <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
-            <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
-            <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={() => fetchPolls('latest')} /> : <Navigate to="/login" replace />} />
-            <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} /> : <Navigate to="/login" replace />} />
-            <Route path="/ayarlar" element={isAuthenticated ? <Ayarlar /> : <Navigate to="/login" replace />} />
-          </Routes>
-        </main>
+          {/* Ana İçerik Bölümü */}
+          <main className="min-h-[500px]">
+            <Routes>
+              <Route path="/" element={<Navigate to="/anketler" replace />} />
+              <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy} fetchPolls={fetchPolls} onDeletePoll={handleDeletePoll} />} />
+              <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
+              <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
+              <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={() => fetchPolls('latest')} /> : <Navigate to="/login" replace />} />
+              <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} /> : <Navigate to="/login" replace />} />
+              <Route path="/ayarlar" element={isAuthenticated ? <Ayarlar /> : <Navigate to="/login" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
     </BrowserRouter>
   );
