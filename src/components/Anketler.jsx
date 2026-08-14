@@ -24,7 +24,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy }) {
           onClick={() => setSortBy('latest')}
         >
       <div className="category-filter-bar">
-        {categories.map(category => (
+        //{categories.map(category => (
           <button 
     className={`category-btn ${sortBy === 'latest' ? 'active' : ''}`}
     onClick={() => {
