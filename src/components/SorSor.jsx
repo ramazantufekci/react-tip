@@ -20,7 +20,12 @@ function SorSor({ onPollCreated }) {
 
     const handleAddOptionSlot = () => {
     if (options.length >= 6) {
-      alert("En fazla 6 şık ekleyebilirsiniz!");
+      Swal.fire({
+      icon: 'info',
+      title: 'Şık Sınırı',
+      text: 'En fazla 6 şık ekleyebilirsiniz!',
+      confirmButtonColor: '#007bff'
+    });
       return;
     }
     setOptions([...options, { text: '', image: null }]);
@@ -29,7 +34,12 @@ function SorSor({ onPollCreated }) {
   // İstenilen Şık Satırını Silme
   const handleRemoveOptionSlot = (indexToId) => {
     if (options.length <= 2) {
-      alert("En az 2 şık bulunmalıdır!");
+      Swal.fire({
+      icon: 'error',
+      title: 'Yetersiz Seçenek',
+      text: 'En az 2 şık bulunmalıdır!',
+      confirmButtonColor: '#007bff'
+    });
       return;
     }
     setOptions(options.filter((_, idx) => idx !== indexToId));
@@ -53,7 +63,12 @@ function SorSor({ onPollCreated }) {
     e.preventDefault();
     
     if (!question.trim() || !category.trim()) {
-      alert("Lütfen soru ve kategori alanlarını doldurun!");
+      Swal.fire({
+      icon: 'warning',
+      title: 'Eksik Alan',
+      text: 'Lütfen soru ve kategori alanlarını doldurun!',
+      confirmButtonColor: '#007bff'
+    });
       return;
     }
 
@@ -81,11 +96,23 @@ function SorSor({ onPollCreated }) {
         if (typeof onPollCreated === 'function') {
           await onPollCreated();
         }
+        Swal.fire({
+        icon: 'success',
+        title: 'Anket Yayında!',
+        text: 'Anketiniz topluluğa başarıyla sunuldu.',
+        confirmButtonColor: '#28a745',
+        timer: 2500
+      });
         
         // Liste başarıyla güncellendikten sonra kullanıcıyı yönlendiriyoruz
         navigate('/anketler');
       } else {
-        alert("Anket oluşturulurken bir hata meydana geldi.");
+        Swal.fire({
+        icon: 'error',
+        title: 'Hata',
+        text: 'Anket oluşturulurken bir hata meydana geldi.',
+        confirmButtonColor: '#dc3545'
+      });
       }
     } catch (error) {
       console.error("Bağlantı hatası:", error);
