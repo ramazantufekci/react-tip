@@ -73,7 +73,7 @@ function Profil({ onDeletePoll }) {
   return (
     <div className="profil-container" style={{ padding: '10px 0' }}>
       {/* Üst Kullanıcı Kartı Açılışı */}
-      <div className="user-profile-header" style={{ background: '#ffffff', border: '1px solid #e0e0e0', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '20px' }}>
+      <div className="user-profile-header" style={{ background: '#ffffff', border: '1px solid #e0e0e0', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
         <Link to="/ayarlar" style={{ position: 'absolute', top: '16px', right: '16px', textDecoration: 'none', fontSize: '13px', color: '#007bff', fontWeight: '600' }}>
     ⚙️ Hesap Ayarları
   </Link>
