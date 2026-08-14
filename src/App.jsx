@@ -8,6 +8,7 @@ import { useAuth } from './context/AuthContext';
 import { API_BASE_URL } from './config'; // Merkezi URL dosyanız
 import Swal from 'sweetalert2';
 import './App.css';
+import Profil from './components/Profil';
 
 function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
@@ -201,6 +202,9 @@ function App() {
           <div className="nav-auth-right">
             {isAuthenticated ? (
               <div className="user-profile-menu">
+                 <NavLink to="/profil" className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        👤 Profilim (<strong>{user?.name}</strong>)
+      </NavLink>
                 <span className="welcome-text">Hoş geldin, <strong>{user?.name}</strong> 👋</span>
                 <button onClick={logout} className="logout-btn">Çıkış Yap</button>
               </div>
@@ -219,6 +223,7 @@ function App() {
             <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} onDeletePoll={handleDeletePoll}/>} />
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
             <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace />} />
+            <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} /> : <Navigate to="/login" replace />}/>
           </Routes>
         </main>
       </div>
