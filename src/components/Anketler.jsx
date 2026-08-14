@@ -25,17 +25,16 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy }) {
         >
       <div className="category-filter-bar">
         {categories.map(category => (
-          <button
-            key={category}
-            className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
+          <button 
+    className={`category-btn ${sortBy === 'latest' ? 'active' : ''}`}
+    onClick={() => {
+      setSortBy('latest');
+      // 🌟 Eğer zaten 'latest' ise bile butona basıldığında listeyi el ile (manual) tazelemeye zorla
+      if (sortBy === 'latest') fetchPolls('latest'); 
+    }}
+  >
     ✨ En Yeni
-        </button>
+  </button>
         <button 
           className={`category-btn ${sortBy === 'upvotes' ? 'active' : ''}`}
           onClick={() => setSortBy('upvotes')}
