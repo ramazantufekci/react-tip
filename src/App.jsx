@@ -188,6 +188,10 @@ function App() {
         <header className="header">
           <h1>://kararsizkaldim.com</h1>
           <p>Her Konuda İkilemlerinizi Topluluk Çözüyor ve Oyluyor 🌐</p>
+          <div className="bg-blue-600 text-white p-6 text-center rounded-xl shadow-lg m-4">
+  <h1 className="text-3xl font-extrabold tracking-tight">Tailwind Başarıyla Kuruldu! 🎉</h1>
+  <p className="text-sm opacity-90 mt-2">Artık siteniz çok daha hızlı ve modern.</p>
+</div>
         </header>
 
         <nav className="navbar">
