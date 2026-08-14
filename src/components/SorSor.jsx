@@ -18,7 +18,36 @@ function SorSor({ onPollCreated }) {
   ]);
   const [loading, setLoading] = useState(false);
 
-  // handleAddOptionSlot, handleRemoveOptionSlot, handleTextChange, handleFileChange kodları aynen kalıyor...
+    const handleAddOptionSlot = () => {
+    if (options.length >= 6) {
+      alert("En fazla 6 şık ekleyebilirsiniz!");
+      return;
+    }
+    setOptions([...options, { text: '', image: null }]);
+  };
+
+  // İstenilen Şık Satırını Silme
+  const handleRemoveOptionSlot = (indexToId) => {
+    if (options.length <= 2) {
+      alert("En az 2 şık bulunmalıdır!");
+      return;
+    }
+    setOptions(options.filter((_, idx) => idx !== indexToId));
+  };
+
+  // Şık Metni Değiştiğinde State Güncelleme
+  const handleTextChange = (index, value) => {
+    const updated = [...options];
+    updated[index].text = value;
+    setOptions(updated);
+  };
+
+  // Şık Resmi Seçildiğinde State Güncelleme
+  const handleFileChange = (index, file) => {
+    const updated = [...options];
+    updated[index].image = file;
+    setOptions(updated);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
