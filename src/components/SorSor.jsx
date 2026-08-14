@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config'; // Merkezi URL dosyasından çektik
-
+import Swal from 'sweetalert2';
 // 🌟 1. DEĞİŞİKLİK:onPollCreated prop'unu içeri alıyoruz
 function SorSor({ onPollCreated }) {
   const navigate = useNavigate();
