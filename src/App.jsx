@@ -25,23 +25,25 @@ function App() {
 
   // Anketleri API'den çeken merkezi fonksiyon
   const fetchPolls = async (currentSort = sortBy) => {
+     setLoading(true); 
     try {
-      const response = await fetch(`${API_BASE_URL}/polls?sort=${currentSort}`);
+      const timestamp = new Date().getTime();
+    const response = await fetch(`${API_BASE_URL}/polls?sort=${currentSort}&_t=${timestamp}`);
       if (response.ok) {
-        const data = await response.json();
-        const formattedPolls = data.map(poll => ({
-          ...poll,
-          options: typeof poll.options === 'string' ? JSON.parse(poll.options) : poll.options,
-          voted: myVotes.includes(poll.id),       
-          upvotedByMe: myUpvotes.includes(poll.id)  
-        }));
-        setPolls(formattedPolls);
-      }
-    } catch (error) {
-      console.error("API hatası:", error);
-    } finally {
-      setLoading(false);
+      const data = await response.json();
+      const formattedPolls = data.map(poll => ({
+        ...poll,
+        options: typeof poll.options === 'string' ? JSON.parse(poll.options) : poll.options,
+        voted: myVotes.includes(poll.id),       
+        upvotedByMe: myUpvotes.includes(poll.id)  
+      }));
+      setPolls(formattedPolls);
     }
+  } catch (error) {
+    console.error("API hatası:", error);
+  } finally {
+    setLoading(false);
+  }
   };
 
   // Filtre veya oylar değiştikçe listeyi tazeleyin
