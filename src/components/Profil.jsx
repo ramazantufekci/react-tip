@@ -74,6 +74,9 @@ function Profil({ onDeletePoll }) {
     <div className="profil-container" style={{ padding: '10px 0' }}>
       {/* Üst Kullanıcı Kartı Açılışı */}
       <div className="user-profile-header" style={{ background: '#ffffff', border: '1px solid #e0e0e0', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '20px' }}>
+        <Link to="/ayarlar" style={{ position: 'absolute', top: '16px', right: '16px', textDecoration: 'none', fontSize: '13px', color: '#007bff', fontWeight: '600' }}>
+    ⚙️ Hesap Ayarları
+  </Link>
         <div style={{ width: '70px', height: '70px', background: '#e7f1ff', color: '#007bff', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '28px', fontWeight: 'bold', margin: '0 auto 12px auto' }}>
           {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
         </div>
