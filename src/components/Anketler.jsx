@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 // 🌟 DÜZELTME 1: fetchPolls fonksiyonu props olarak içeriye eklendi
 function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, fetchPolls, onDeletePoll }) {
   const [selectedCategory, setSelectedCategory] = useState('Tümü');
-
+const { user } = useAuth();
   // Mevcut anketlerden dinamik olarak benzersiz kategorileri çıkarma
   const categories = ['Tümü', ...new Set(polls.map(poll => poll.category).filter(Boolean))];
 
