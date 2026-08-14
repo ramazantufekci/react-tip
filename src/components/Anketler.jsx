@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // 🌟 DÜZELTME 1: fetchPolls fonksiyonu props olarak içeriye eklendi
-function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, fetchPolls }) {
+function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, fetchPolls, onDeletePoll }) {
   const [selectedCategory, setSelectedCategory] = useState('Tümü');
 
   // Mevcut anketlerden dinamik olarak benzersiz kategorileri çıkarma
@@ -73,8 +73,21 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, fetchPolls }) {
             const totalVotes = poll.options ? poll.options.reduce((sum, opt) => sum + (opt.votes || 0), 0) : 0;
 
             return (
-              <div key={poll.id} className="poll-card">
-                
+              <div key={poll.id} className="poll-card" style={{ position: 'relative' }}>
+                {user && poll.user_id === user.id && (
+        <button 
+          onClick={() => onDeletePoll(poll.id)}
+          style={{
+            position: 'absolute', top: '12px', right: '12px',
+            background: '#fff5f5', color: '#dc3545', border: '1px solid #ffc9c9',
+            padding: '4px 8px', borderRadius: '6px', fontSize: '11px',
+            fontWeight: 'bold', cursor: 'pointer', zIndex: 10
+          }}
+          className="delete-poll-btn"
+        >
+          🗑️ Anketi Sil
+        </button>
+      )}
                 {/* Sol Taraf: Oylama (Upvote) Alanı */}
                 <div className="upvote-section">
                   <button 
