@@ -114,6 +114,32 @@ function App() {
   if (authLoading || loading) {
     return <div className="loading-screen">Oturum kontrol ediliyor... ⏳</div>;
   }
+  const handleDeletePoll = async (pollId) => {
+  if (!window.confirm("Bu anketi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/polls/${pollId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      // 🌟 Sayfayı yenilemeden silinen anketi anlık olarak state listesinden çıkartıyoruz
+      setPolls(prevPolls => prevPolls.filter(poll => poll.id !== pollId));
+      alert("Anket başarıyla silindi.");
+    } else {
+      const errData = await response.json();
+      alert(errData.message || "Anket silinirken bir hata oluştu.");
+    }
+  } catch (error) {
+    console.error("Silme hatası:", error);
+  }
+};
 
   return (
     <BrowserRouter>
@@ -150,8 +176,8 @@ function App() {
         <main className="content">
           <Routes>
             <Route path="/" element={<Navigate to="/anketler" replace />} />
-             <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy}/>} />
-            <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
+             <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy} onDeletePoll={handleDeletePoll}/>} />
+            <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} onDeletePoll={handleDeletePoll}/>} />
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
             <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={fetchPolls} /> : <Navigate to="/login" replace />} />
           </Routes>
