@@ -6,6 +6,7 @@ import AnketDetay from './components/AnketDetay';
 import Login from './components/Login'; 
 import { useAuth } from './context/AuthContext'; 
 import { API_BASE_URL } from './config'; // Merkezi URL dosyanız
+import Swal from 'sweetalert2';
 import './App.css';
 
 function App() {
@@ -54,7 +55,12 @@ function App() {
   // Oy verme işlemi
   const handleVote = async (pollId, optionIndex) => {
     if (!isAuthenticated) {
-      alert("Oy kullanabilmek için lütfen giriş yapın!");
+      Swal.fire({
+      icon: 'warning',
+      title: 'Oturum Açın',
+      text: 'Oy kullanabilmek için lütfen giriş yapın!',
+      confirmButtonColor: '#007bff'
+    });
       return;
     }
     if (myVotes.includes(pollId)) return;
@@ -73,6 +79,14 @@ function App() {
         const updatedVotes = [...myVotes, pollId];
         setMyVotes(updatedVotes);
         localStorage.setItem('my_votes', JSON.stringify(updatedVotes));
+        Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Oyunuz başarıyla kaydedildi!',
+        showConfirmButton: false,
+        timer: 2000
+      });
       }
     } catch (error) {
       console.error("Oy verilemedi:", error);
@@ -82,7 +96,12 @@ function App() {
   // Upvote işlemi
   const handleUpvote = async (pollId) => {
     if (!isAuthenticated) {
-      alert("Yukarı taşıma işlemi için lütfen giriş yapın!");
+      Swal.fire({
+      icon: 'warning',
+      title: 'Giriş Gerekli',
+      text: 'Yukarı taşıma işlemi için lütfen giriş yapın!',
+      confirmButtonColor: '#007bff'
+    });
       return;
     }
     const isAlreadyUpvoted = myUpvotes.includes(pollId);
@@ -115,32 +134,53 @@ function App() {
     return <div className="loading-screen">Oturum kontrol ediliyor... ⏳</div>;
   }
   const handleDeletePoll = async (pollId) => {
-  if (!window.confirm("Bu anketi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) {
-    return;
-  }
+  // 🌟 Klasik window.confirm yerine harika bir modern onay kutusu popup'ı:
+  Swal.fire({
+    title: 'Emin misiniz?',
+    text: "Bu anketi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Evet, Sil!',
+    cancelButtonText: 'Vazgeç',
+    background: '#ffffff',
+    borderRadius: '12px'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/polls/${pollId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/polls/${pollId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        if (response.ok) {
+          setPolls(prevPolls => prevPolls.filter(poll => poll.id !== pollId));
+          // Başarılı popup'ı
+          Swal.fire({
+            icon: 'success',
+            title: 'Silindi!',
+            text: 'Anket başarıyla silindi.',
+            confirmButtonColor: '#28a745'
+          });
+        } else {
+          const errData = await response.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Hata',
+            text: errData.message || "Anket silinirken bir hata oluştu.",
+            confirmButtonColor: '#007bff'
+          });
+        }
+      } catch (error) {
+        console.error("Silme hatası:", error);
       }
-    });
-
-    if (response.ok) {
-      // 🌟 Sayfayı yenilemeden silinen anketi anlık olarak state listesinden çıkartıyoruz
-      setPolls(prevPolls => prevPolls.filter(poll => poll.id !== pollId));
-      alert("Anket başarıyla silindi.");
-    } else {
-      const errData = await response.json();
-      alert(errData.message || "Anket silinirken bir hata oluştu.");
     }
-  } catch (error) {
-    console.error("Silme hatası:", error);
-  }
+  });
 };
-
   return (
     <BrowserRouter>
       <div className="app-container">
