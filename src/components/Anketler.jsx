@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // 🌟 DÜZELTME 1: fetchPolls fonksiyonu props olarak içeriye eklendi
 function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, fetchPolls, onDeletePoll }) {
