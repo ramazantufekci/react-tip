@@ -114,7 +114,7 @@ function App() {
       Swal.fire({ icon: 'info', title: 'Giriş gerekli', text: 'Anketleri öne çıkarmak için giriş yapın.', confirmButtonColor: '#0f172a' });
       return;
     }
-      const slug = poll.slug);
+      const slug = poll.slug;
 
   if (!slug) {
     console.error('Anket slug bulunamadı:', poll);
