@@ -82,7 +82,33 @@ const [loadingPoll, setLoadingPoll] = useState(true);
     } else if (response.status === 401) navigate('/login');
   };
 
-  if (!poll) return <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm"><p className="font-black">Anket bulunamadı.</p><Link to="/anketler" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-indigo-600"><ArrowLeft size={15} /> Anketlere dön</Link></div>;
+  if (loadingPoll) {
+  return (
+    <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+      <p className="font-black text-slate-700">
+        Anket yükleniyor...
+      </p>
+    </div>
+  );
+}
+
+if (!poll) {
+  return (
+    <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+      <p className="font-black">
+        Anket bulunamadı.
+      </p>
+
+      <Link
+        to="/anketler"
+        className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-indigo-600"
+      >
+        <ArrowLeft size={15} />
+        Anketlere dön
+      </Link>
+    </div>
+  );
+}
 
   const totalVotes = (poll.options || []).reduce((sum, o) => sum + (o.votes || 0), 0);
 
