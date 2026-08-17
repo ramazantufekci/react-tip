@@ -20,11 +20,8 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
   useEffect(() => {
   const fetchPoll = async () => {
-    console.log(slug);
     if (!slug) return;
-
     setLoadingPoll(true);
-
     try {
       const response = await fetch(
         `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`
@@ -34,9 +31,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
         setPoll(null);
         return;
       }
-console.log(response.json());
       const data = await response.json();
-
       setPoll({
         ...data,
         slug: data.slug,
