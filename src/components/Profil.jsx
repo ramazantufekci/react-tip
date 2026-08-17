@@ -29,10 +29,13 @@ function Profil({ onDeletePoll }) {
     })();
   }, [token]);
 
-  const remove = async id => {
-    await onDeletePoll(id);
-    setCreated(prev => prev.filter(p => p.id !== id));
-  };
+  const remove = async (poll) => {
+  await onDeletePoll(poll);
+
+  setCreated(prev =>
+    prev.filter(p => p.id !== poll.id)
+  );
+};
 
   if (loading) return <div className="grid min-h-80 place-items-center rounded-3xl border border-slate-200 bg-white text-sm font-semibold text-slate-500">Profil yükleniyor...</div>;
 
@@ -61,8 +64,8 @@ function Profil({ onDeletePoll }) {
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center"><p className="font-bold text-slate-800">Henüz burada bir şey yok.</p><Link to={tab === 'created' ? '/sor-sor' : '/anketler'} className="mt-3 inline-flex items-center gap-1 text-sm font-black text-indigo-600">Keşfet <ArrowRight size={15} /></Link></div>
         ) : list.map(poll => (
           <div key={poll.id} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="min-w-0"><span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">#{poll.category || 'Genel'}</span><Link to={`/anketler/${poll.id}`} className="mt-1 block truncate font-extrabold text-slate-900 hover:text-indigo-600">{poll.question}</Link>{tab === 'voted' && <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-emerald-600"><CheckCircle2 size={13} /> Oy kullanıldı</span>}</div>
-            {tab === 'created' && <button onClick={() => remove(poll.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15} /></button>}
+            <div className="min-w-0"><span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">#{poll.category || 'Genel'}</span><Link to={`/anketler/${poll.slug}`} className="mt-1 block truncate font-extrabold text-slate-900 hover:text-indigo-600">{poll.question}</Link>{tab === 'voted' && <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-emerald-600"><CheckCircle2 size={13} /> Oy kullanıldı</span>}</div>
+            {tab === 'created' && <button onClick={() => remove(poll)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15} /></button>}
           </div>
         ))}
       </div>
