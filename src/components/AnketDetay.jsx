@@ -34,7 +34,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
       const data = await response.json();
       setPoll({
         ...data,
-        slug: data.slug,
+        //slug: data.slug,
         options:
           typeof data.options === 'string'
             ? JSON.parse(data.options)
