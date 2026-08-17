@@ -54,7 +54,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
               <article key={poll.id} className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60">
                 <div className="flex gap-3 p-4 sm:gap-5 sm:p-5">
                   <div className="flex shrink-0 flex-col items-center">
-                    <button onClick={() => onUpvote(poll.id)} className={`grid h-10 w-10 place-items-center rounded-xl border transition active:scale-95 ${poll.upvotedByMe ? 'border-indigo-200 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'}`} aria-label="Anketi öne çıkar">
+                    <button onClick={() => onUpvote(poll)} className={`grid h-10 w-10 place-items-center rounded-xl border transition active:scale-95 ${poll.upvotedByMe ? 'border-indigo-200 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'}`} aria-label="Anketi öne çıkar">
                       <ArrowUp size={19} strokeWidth={2.5} />
                     </button>
                     <span className="mt-1 text-xs font-black text-slate-600">{poll.upvotes || 0}</span>
@@ -69,7 +69,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
                         </h2>
                       </div>
                       {user && poll.user_id === user.id && (
-                        <button onClick={() => onDeletePoll(poll.id)} className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600" aria-label="Anketi sil"><Trash2 size={16} /></button>
+                        <button onClick={() => onDeletePoll(poll)} className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600" aria-label="Anketi sil"><Trash2 size={16} /></button>
                       )}
                     </div>
 
@@ -78,13 +78,13 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
                         const percent = totalVotes ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0;
                         const hasImage = Boolean(option.image_path);
                         return hasImage ? (
-                          <button key={index} type="button" onClick={() => !poll.voted && onVote(poll.id, index)} disabled={poll.voted} className="group/option relative h-48 overflow-hidden rounded-2xl border border-slate-200 text-left">
+                          <button key={index} type="button" onClick={() => !poll.voted && onVote(poll, index)} disabled={poll.voted} className="group/option relative h-48 overflow-hidden rounded-2xl border border-slate-200 text-left">
                             <img src={option.image_path} alt={option.text || `Seçenek ${index + 1}`} className="h-full w-full object-cover transition duration-500 group-hover/option:scale-105" />
                             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-3 pt-10 text-xs font-bold text-white">{option.text || `Seçenek ${String.fromCharCode(65 + index)}`}</span>
                             {poll.voted && <span className="absolute inset-0 grid place-items-center bg-indigo-600/75 text-center text-white backdrop-blur-[1px]"><span><strong className="block text-2xl">{percent}%</strong><small>{option.votes || 0} oy</small></span></span>}
                           </button>
                         ) : (
-                          <button key={index} type="button" onClick={() => onVote(poll.id, index)} disabled={poll.voted} className="relative flex min-h-14 items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 px-4 text-left text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-white disabled:cursor-default">
+                          <button key={index} type="button" onClick={() => onVote(poll, index)} disabled={poll.voted} className="relative flex min-h-14 items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 px-4 text-left text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-white disabled:cursor-default">
                             {poll.voted && <span className="absolute inset-y-0 left-0 bg-indigo-100/80" style={{ width: `${percent}%` }} />}
                             <span className="relative flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-lg bg-white text-[10px] font-black text-slate-400 shadow-sm">{String.fromCharCode(65 + index)}</span>{option.text}</span>
                             {poll.voted && <span className="relative text-xs font-black text-indigo-600">{percent}%</span>}
