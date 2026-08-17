@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowUp, CheckCircle2, MessageCircle, Reply, Send } from 'lu
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
-import { getPollSlug } from './utils/poll';
+import { getPollSlug } from '../utils/poll';
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
   const { token, isAuthenticated } = useAuth();
