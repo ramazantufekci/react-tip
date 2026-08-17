@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { ArrowUp, Check, Flame, Hash, MessageCircle, Plus, Sparkles, Trash2, Vote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPollSlug } from '../utils/poll';
 const filters = [
   { id: 'latest', label: 'En yeni', icon: Sparkles },
   { id: 'upvotes', label: 'Trend', icon: Flame },
@@ -65,7 +64,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
                       <div className="min-w-0">
                         <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-600"><Hash size={11} /> {poll.category || 'Genel'}</span>
                         <h2 className="mt-2 text-base font-extrabold leading-snug text-slate-950 sm:text-lg">
-                          <Link to={`/anketler/${getPollSlug(poll)}`} className="transition hover:text-indigo-600">{poll.question}</Link>
+                          <Link to={`/anketler/${poll}`} className="transition hover:text-indigo-600">{poll.question}</Link>
                         </h2>
                       </div>
                       {user && poll.user_id === user.id && (
