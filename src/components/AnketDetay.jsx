@@ -3,7 +3,6 @@ import { ArrowLeft, ArrowUp, CheckCircle2, MessageCircle, Reply, Send } from 'lu
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
-import { getPollSlug } from '../utils/poll';
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
   const { token, isAuthenticated } = useAuth();
@@ -39,7 +38,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
       setPoll({
         ...data,
-        slug: data.slug || getPollSlug(data),
+        slug: data.slug,
         options:
           typeof data.options === 'string'
             ? JSON.parse(data.options)
@@ -57,9 +56,10 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 }, [slug]);
 
   const fetchComments = useCallback(async (pageNumber = 1) => {
+    if (!slug) return;
     setLoadingComments(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/polls/${id}/comments?page=${pageNumber}`);
+      const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}/comments?page=${pageNumber}`);
       if (!response.ok) return;
       const result = await response.json();
       const incoming = result.data || [];
@@ -67,16 +67,16 @@ const [loadingPoll, setLoadingPoll] = useState(true);
       setHasMore(Boolean(result.has_more));
       setPage(pageNumber);
     } finally { setLoadingComments(false); }
-  }, [id]);
+  }, [slug]);
 
-  useEffect(() => { if (id) fetchComments(1); }, [id, fetchComments]);
+  useEffect(() => { if (slug) fetchComments(1); }, [slug, fetchComments]);
 
   const submitComment = async (e, parentId = null) => {
     e.preventDefault();
     if (!isAuthenticated) { navigate('/login'); return; }
     const text = parentId ? replyInput : commentInput;
     if (!text.trim()) return;
-    const response = await fetch(`${API_BASE_URL}/polls/${id}/comments`, {
+    const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ text, parent_id: parentId }),
