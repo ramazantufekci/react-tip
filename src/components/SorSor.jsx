@@ -38,6 +38,7 @@ function SorSor({ onPollCreated }) {
     try {
       const response = await fetch(`${API_BASE_URL}/polls`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
       if (!response.ok) throw new Error('Anket oluşturulamadı.');
+      console.log(response,"throw dan sonra");
       if (typeof onPollCreated === 'function') await onPollCreated();
       await Swal.fire({ icon: 'success', title: 'Anket yayında!', text: 'Topluluk artık senin için karar verebilir.', confirmButtonColor: '#0f172a', timer: 1800 });
       console.log(response);
