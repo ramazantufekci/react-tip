@@ -33,7 +33,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
         setPoll(null);
         return;
       }
-
+console.log(response.json());
       const data = await response.json();
 
       setPoll({
