@@ -122,7 +122,7 @@ function App() {
   }
     const isUpvoted = myUpvotes.includes(poll.id);
     try {
-      const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)/upvote`, {
+      const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}/upvote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: isUpvoted ? 'remove' : 'add' }),
