@@ -1,178 +1,90 @@
-// src/components/SorSor.jsx
-
 import React, { useState } from 'react';
+import { ImagePlus, Plus, Send, Trash2, Type, X } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../config'; // Merkezi URL dosyasından çektik
-import Swal from 'sweetalert2';
-// 🌟 1. DEĞİŞİKLİK:onPollCreated prop'unu içeri alıyoruz
+import { API_BASE_URL } from '../config';
+
 function SorSor({ onPollCreated }) {
   const navigate = useNavigate();
   const { token } = useAuth();
-  
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState('');
-  const [options, setOptions] = useState([
-    { text: '', image: null },
-    { text: '', image: null }
-  ]);
+  const [options, setOptions] = useState([{ text: '', image: null }, { text: '', image: null }]);
   const [loading, setLoading] = useState(false);
 
-    const handleAddOptionSlot = () => {
-    if (options.length >= 6) {
-      Swal.fire({
-      icon: 'info',
-      title: 'Şık Sınırı',
-      text: 'En fazla 6 şık ekleyebilirsiniz!',
-      confirmButtonColor: '#007bff'
-    });
-      return;
-    }
-    setOptions([...options, { text: '', image: null }]);
+  const updateOption = (index, patch) => setOptions(prev => prev.map((item, i) => i === index ? { ...item, ...patch } : item));
+  const addOption = () => options.length < 6 && setOptions([...options, { text: '', image: null }]);
+  const removeOption = index => {
+    if (options.length <= 2) return;
+    setOptions(options.filter((_, i) => i !== index));
   };
 
-  // İstenilen Şık Satırını Silme
-  const handleRemoveOptionSlot = (indexToId) => {
-    if (options.length <= 2) {
-      Swal.fire({
-      icon: 'error',
-      title: 'Yetersiz Seçenek',
-      text: 'En az 2 şık bulunmalıdır!',
-      confirmButtonColor: '#007bff'
-    });
-      return;
-    }
-    setOptions(options.filter((_, idx) => idx !== indexToId));
-  };
-
-  // Şık Metni Değiştiğinde State Güncelleme
-  const handleTextChange = (index, value) => {
-    const updated = [...options];
-    updated[index].text = value;
-    setOptions(updated);
-  };
-
-  // Şık Resmi Seçildiğinde State Güncelleme
-  const handleFileChange = (index, file) => {
-    const updated = [...options];
-    updated[index].image = file;
-    setOptions(updated);
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    
     if (!question.trim() || !category.trim()) {
-      Swal.fire({
-      icon: 'warning',
-      title: 'Eksik Alan',
-      text: 'Lütfen soru ve kategori alanlarını doldurun!',
-      confirmButtonColor: '#007bff'
-    });
+      Swal.fire({ icon: 'warning', title: 'Eksik bilgi', text: 'Soru ve kategori alanlarını doldurun.', confirmButtonColor: '#0f172a' });
       return;
     }
-
     setLoading(true);
     const formData = new FormData();
     formData.append('question', question);
     formData.append('category', category);
-
     options.forEach((option, index) => {
       formData.append(`options_text[${index}]`, option.text);
-      if (option.image) {
-        formData.append(`options_images[${index}]`, option.image);
-      }
+      if (option.image) formData.append(`options_images[${index}]`, option.image);
     });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/polls`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-
-      if (response.ok) {
-        // 🌟 2. DEĞİŞİKLİK: Yönlendirme yapmadan HEMEN ÖNCE listeyi tazelemek için fonksiyonu tetikliyoruz
-        if (typeof onPollCreated === 'function') {
-          await onPollCreated();
-        }
-        Swal.fire({
-        icon: 'success',
-        title: 'Anket Yayında!',
-        text: 'Anketiniz topluluğa başarıyla sunuldu.',
-        confirmButtonColor: '#28a745',
-        timer: 2500
-      });
-        
-        // Liste başarıyla güncellendikten sonra kullanıcıyı yönlendiriyoruz
-        navigate('/anketler');
-      } else {
-        Swal.fire({
-        icon: 'error',
-        title: 'Hata',
-        text: 'Anket oluşturulurken bir hata meydana geldi.',
-        confirmButtonColor: '#dc3545'
-      });
-      }
+      const response = await fetch(`${API_BASE_URL}/polls`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
+      if (!response.ok) throw new Error('Anket oluşturulamadı.');
+      if (typeof onPollCreated === 'function') await onPollCreated();
+      await Swal.fire({ icon: 'success', title: 'Anket yayında!', text: 'Topluluk artık senin için karar verebilir.', confirmButtonColor: '#0f172a', timer: 1800 });
+      navigate('/anketler');
     } catch (error) {
-      console.error("Bağlantı hatası:", error);
+      Swal.fire({ icon: 'error', title: 'Bir sorun oluştu', text: error.message, confirmButtonColor: '#0f172a' });
     } finally {
       setLoading(false);
     }
   };
 
+  const input = 'h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10';
+
   return (
-    <div className="sor-sor-container">
-      <h2>Dinamik Anket / Kıyaslama Oluştur 📊</h2>
-      <p className="subtitle">Dilediğiniz kadar seçenek ekleyin, resimli şıklarda yazıyı boş bırakabilirsiniz.</p>
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-5">
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Yeni anket</p>
+        <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Kararsız kaldın mı? Sor.</h1>
+        <p className="mt-1 text-sm text-slate-500">Metin, görsel veya ikisini birlikte kullan. En fazla 6 seçenek ekleyebilirsin.</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="poll-create-form">
-        
-        <div className="form-group">
-          <label>Sorunuz / İkileminiz Nedir?</label>
-          <input type="text" placeholder="Örn: Sizce en iyi online dizi platformu hangisi?" value={question} onChange={e => setQuestion(e.target.value)} required />
+      <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xl shadow-slate-200/50 sm:p-7">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-black text-slate-600">Sorun / ikilemin</span><input className={input} value={question} onChange={e => setQuestion(e.target.value)} required placeholder="Örn. Bu iki ayakkabıdan hangisi daha iyi?" /></label>
+          <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-black text-slate-600">Kategori</span><input className={input} value={category} onChange={e => setCategory(e.target.value)} required placeholder="Moda, Teknoloji, Yemek..." /></label>
         </div>
 
-        <div className="form-group">
-          <label>Konu / Kategori Başlığı</label>
-          <input type="text" placeholder="Örn: Eğlence, Dizi, Teknoloji" value={category} onChange={e => setCategory(e.target.value)} required />
+        <div className="my-7 flex items-center gap-3"><div className="h-px flex-1 bg-slate-200" /><span className="text-xs font-black uppercase tracking-wider text-slate-400">Seçenekler</span><div className="h-px flex-1 bg-slate-200" /></div>
+
+        <div className="space-y-3">
+          {options.map((option, index) => (
+            <div key={index} className="relative rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition hover:border-slate-300">
+              <div className="mb-3 flex items-center justify-between"><span className="inline-flex items-center gap-2 text-xs font-black text-slate-500"><span className="grid h-7 w-7 place-items-center rounded-lg bg-slate-950 text-white">{String.fromCharCode(65 + index)}</span> Seçenek {index + 1}</span>{options.length > 2 && <button type="button" onClick={() => removeOption(index)} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-rose-500 hover:bg-rose-50"><Trash2 size={13} /> Kaldır</button>}</div>
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="relative block"><Type className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input className={`${input} pl-10`} value={option.text} onChange={e => updateOption(index, { text: e.target.value })} placeholder="Seçenek metni (görsel varsa boş olabilir)" /></label>
+                <label className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 text-xs font-black text-slate-600 transition hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-600"><ImagePlus size={17} /> Görsel seç<input type="file" accept="image/*" className="hidden" onChange={e => updateOption(index, { image: e.target.files?.[0] || null })} /></label>
+              </div>
+              {option.image && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">✓ {option.image.name}</p>}
+            </div>
+          ))}
         </div>
 
-        <h3 style={{ fontSize: '14px', marginBottom: '10px', color: '#495057' }}>Seçenekler / Şıklar</h3>
+        {options.length < 6 && <button type="button" onClick={addOption} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-indigo-300 bg-indigo-50 text-sm font-black text-indigo-600 hover:bg-indigo-100"><Plus size={17} /> Yeni seçenek ekle</button>}
 
-        {/* Dinamik Şık Listesi Render Alanı */}
-        {options.map((option, index) => (
-          <div key={index} className="option-upload-block" style={{ border: '1px solid #e0e0e0', padding: '12px', borderRadius: '8px', marginBottom: '12px', background: '#fdfdfd', position: 'relative' }}>
-            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#007bff', display: 'block', marginBottom: '6px' }}>Şık {String.fromCharCode(65 + index)}</span>
-            
-            <div className="form-group" style={{ marginBottom: '8px' }}>
-              <input type="text" placeholder="Seçenek metni (Resim varsa boş kalabilir)" value={option.text} onChange={e => handleTextChange(index, e.target.value)} />
-            </div>
-            
-            <div className="form-group" style={{ marginBottom: '4px' }}>
-              <input type="file" accept="image/*" onChange={e => handleFileChange(index, e.target.files[0])} />
-            </div>
-
-            {/* İlk 2 şıktan sonrakilere silme butonu koyuyoruz */}
-            {options.length > 2 && (
-              <button type="button" onClick={() => handleRemoveOptionSlot(index)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-                ❌ Şıkkı Kaldır
-              </button>
-            )}
-          </div>
-        ))}
-
-        {/* Yeni Şık Ekleme Tetikleyicisi */}
-        {options.length < 6 && (
-          <button type="button" onClick={handleAddOptionSlot} style={{ width: '100%', backgroundColor: '#007bff', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '16px' }}>
-            ➕ Yeni Seçenek/Şık Ekle
-          </button>
-        )}
-
-        <button type="submit" className="submit-poll-btn" disabled={loading}>
-          {loading ? "Anket Hazırlanıyor..." : "Anketi Topluluğa Sun 🚀"}
-        </button>
-
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" onClick={() => navigate('/anketler')} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-slate-500 hover:bg-slate-100"><X size={17} /> Vazgeç</button>
+          <button disabled={loading} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 text-sm font-black text-white shadow-xl shadow-slate-950/10 hover:bg-indigo-700 disabled:opacity-60"><Send size={17} /> {loading ? 'Yayınlanıyor...' : 'Anketi yayınla'}</button>
+        </div>
       </form>
     </div>
   );
