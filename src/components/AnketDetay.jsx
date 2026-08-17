@@ -1,303 +1,125 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; 
-import { API_BASE_URL } from '../config'; 
+import React, { useCallback, useEffect, useState } from 'react';
+import { ArrowLeft, ArrowUp, CheckCircle2, MessageCircle, Reply, Send } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
   const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
+  const poll = polls.find(p => p.id === Number(id));
+  const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState('');
-  
-  // Hata önleyici: pollComments varsayılan olarak boş bir array olmalı
-  const [pollComments, setPollComments] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingComments, setLoadingComments] = useState(false);
-
-  const [replyingToId, setReplyingToId] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
   const [replyInput, setReplyInput] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(1);
 
-  // Sayısal karşılaştırma garantisi
-  const poll = polls.find(p => p.id === parseInt(id));
-
-  const fetchComments = useCallback(async (pageNumber, isNewComment = false) => {
-    if (!id) return;
+  const fetchComments = useCallback(async (pageNumber = 1) => {
     setLoadingComments(true);
-
     try {
       const response = await fetch(`${API_BASE_URL}/polls/${id}/comments?page=${pageNumber}`);
-      if (response.ok) {
-        const result = await response.json();
-        
-        // Backend'den data gelip gelmediğini güvenli kontrol ediyoruz
-        const newComments = result.data || [];
-
-        if (isNewComment || pageNumber === 1) {
-          setPollComments(newComments);
-          setPage(1);
-        } else {
-          setPollComments(prev => [...(Array.isArray(prev) ? prev : []), ...newComments]);
-        }
-        
-        setHasMore(result.has_more ?? false);
-      }
-    } catch (error) {
-      console.error("Yorumlar yüklenirken hata oluştu:", error);
-    } finally {
-      setLoadingComments(false);
-    }
+      if (!response.ok) return;
+      const result = await response.json();
+      const incoming = result.data || [];
+      setComments(pageNumber === 1 ? incoming : prev => [...prev, ...incoming]);
+      setHasMore(Boolean(result.has_more));
+      setPage(pageNumber);
+    } finally { setLoadingComments(false); }
   }, [id]);
 
-  // İlk yüklemede ve id değiştiğinde tetikle
-  useEffect(() => {
-    if (id) {
-      setPollComments([]);
-      setPage(1);
-      setHasMore(true);
-      fetchComments(1);
-    }
-  }, [id, fetchComments]);
+  useEffect(() => { if (id) fetchComments(1); }, [id, fetchComments]);
 
-  // Kaydırma Takipçisi
-  useEffect(() => {
-    const handleScroll = () => {
-      if (loadingComments || !hasMore) return;
-
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 120) {
-        setPage(prevPage => {
-          const nextPage = prevPage + 1;
-          fetchComments(nextPage);
-          return nextPage;
-        });
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loadingComments, fetchComments]);
-
-  const handleCommentSubmit = async (e, parentId = null) => {
+  const submitComment = async (e, parentId = null) => {
     e.preventDefault();
-     // 🌟 KRİTİK KONTROL: Kullanıcı giriş yapmamışsa engelle ve logine fırlat
-    if (!isAuthenticated) {
-      alert("Yorum yazabilmek veya yanıt verebilmek için lütfen önce giriş yapın! 🔑");
-      navigate('/login');
-      return;
-    }
+    if (!isAuthenticated) { navigate('/login'); return; }
     const text = parentId ? replyInput : commentInput;
     if (!text.trim()) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/polls/${id}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json',
-                 'Authorization': `Bearer ${token}`},
-        body: JSON.stringify({
-          text: text,
-          parent_id: parentId
-        })
-      });
-
-      if (response.ok) {
-        setReplyInput('');
-        setCommentInput('');
-        setReplyingToId(null);
-        await fetchComments(1, true);
-      }else if(response.status === 401){
-        alert("Oturum süreniz dolmuş, lütfen tekrar giriş yapın.");
-        navigate('/login');
-      }
-    } catch (error) {
-      console.error("Yorum kaydedilemedi:", error);
-    }
+    const response = await fetch(`${API_BASE_URL}/polls/${id}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ text, parent_id: parentId }),
+    });
+    if (response.ok) {
+      setCommentInput(''); setReplyInput(''); setReplyingTo(null); fetchComments(1);
+    } else if (response.status === 401) navigate('/login');
   };
 
-  // Eğer anket merkezi state'den henüz yüklenmediyse yükleniyor basıyoruz (Boş sayfa kalmasını önler)
-  if (!poll) {
-    return (
-      <div className="error-container" style={{ textAlign: 'center', padding: '40px' }}>
-        <h2>Anket Yükleniyor veya Bulunamadı... ⏳</h2>
-        <Link to="/anketler" className="back-link">Anketlere Geri Dön</Link>
-      </div>
-    );
-  }
+  if (!poll) return <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm"><p className="font-black">Anket bulunamadı.</p><Link to="/anketler" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-indigo-600"><ArrowLeft size={15} /> Anketlere dön</Link></div>;
+
+  const totalVotes = (poll.options || []).reduce((sum, o) => sum + (o.votes || 0), 0);
 
   return (
-    <div className="anket-detay-container">
-      <Link to="/anketler" className="back-link">⬅ Anketlere Geri Dön</Link>
+    <div className="mx-auto max-w-4xl">
+      <Link to="/anketler" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-950"><ArrowLeft size={16} /> Anketlere dön</Link>
 
-      <div className="poll-detailed-card">
-        <div className="upvote-section">
-          <button className={`upvote-btn ${poll.upvotedByMe ? 'upvoted' : ''}`} onClick={() => onUpvote(poll.id)}>🔼</button>
-          <span className="upvote-count">{poll.upvotes ?? 0}</span>
-        </div>
-        <div className="poll-main-content">
-          <span className="poll-category-tag">{poll.category || 'Genel'}</span>
-          <h2 className="poll-detailed-question">{poll.question}</h2>
-          {poll.image_path && (
-            <div className="poll-image-container">
-              <img src={poll.image_path} alt={poll.question} className="poll-main-image" />
+      <article className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+        <div className="p-5 sm:p-8">
+          <div className="flex gap-4">
+            <div className="flex shrink-0 flex-col items-center">
+              <button onClick={() => onUpvote(poll.id)} className={`grid h-11 w-11 place-items-center rounded-xl border ${poll.upvotedByMe ? 'border-indigo-200 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-slate-50 text-slate-400 hover:text-indigo-600'}`}><ArrowUp size={20} /></button>
+              <span className="mt-1 text-xs font-black">{poll.upvotes || 0}</span>
             </div>
-          )}
-         <div className="poll-options resimli-comparison-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '15px' }}>
-  {(poll.options || []).map((option, index) => {
-    const percent = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
-    const hasImage = !!option.image_path;
+            <div className="min-w-0 flex-1">
+              <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-600">#{poll.category || 'Genel'}</span>
+              <h1 className="mt-3 text-2xl font-black leading-tight tracking-tight text-slate-950 sm:text-3xl">{poll.question}</h1>
 
-    return (
-      <div key={index} className="comparison-card" style={{ width: '100%' }}>
-        {hasImage ? (
-          /* 📸 RESİMLİ TASARIM: Yazı yok, resmin kendisi buton */
-          <div 
-            className={`clickable-image-container ${poll.voted ? 'voted' : ''}`}
-            onClick={() => !poll.voted && onVote(poll.id, index)}
-            style={{
-              position: 'relative',
-              width: '100%',
-              height: '260px',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              cursor: poll.voted ? 'default' : 'pointer',
-              border: '2px solid #eee',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
-            }}
-          >
-            <img src={option.image_path} alt={option.text} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            
-            {/* İsteğe bağlı girilen küçük metin varsa resmin en altında küçük bir etiket olarak gösterilir */}
-            {option.text && (
-              <div style={{ position: 'absolute', bottom: '10px', left: '10px', background: 'rgba(0,0,0,0.7)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
-                {option.text}
+              <div className={`mt-6 grid gap-4 ${poll.options?.length > 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2'}`}>
+                {(poll.options || []).map((option, index) => {
+                  const percent = totalVotes ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0;
+                  if (option.image_path) return (
+                    <button key={index} disabled={poll.voted} onClick={() => !poll.voted && onVote(poll.id, index)} className="group relative h-64 overflow-hidden rounded-2xl border border-slate-200 text-left">
+                      <img src={option.image_path} alt={option.text || 'Seçenek'} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 text-sm font-black text-white">{option.text || `Seçenek ${String.fromCharCode(65 + index)}`}</span>
+                      {poll.voted && <span className="absolute inset-0 grid place-items-center bg-indigo-600/80 text-white"><span className="text-center"><strong className="block text-4xl font-black">{percent}%</strong><small>{option.votes || 0} oy</small></span></span>}
+                    </button>
+                  );
+                  return (
+                    <button key={index} disabled={poll.voted} onClick={() => onVote(poll.id, index)} className="relative flex min-h-16 items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm font-black text-slate-700 hover:border-indigo-300 disabled:cursor-default">
+                      {poll.voted && <span className="absolute inset-y-0 left-0 bg-indigo-100" style={{ width: `${percent}%` }} />}
+                      <span className="relative flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-xl bg-white text-xs shadow-sm">{String.fromCharCode(65 + index)}</span>{option.text}</span>
+                      {poll.voted && <span className="relative text-indigo-600">{percent}%</span>}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-
-            {/* Oy verildikten sonra resmin üzerine gelen şeffaf yüzdelik katmanı */}
-            {poll.voted && (
-              <div className="image-voted-overlay" style={{
-                position: 'absolute',
-                top: 0, left: 0, width: '100%', height: '100%',
-                background: 'rgba(0, 123, 255, 0.65)',
-                color: 'white',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                fontSize: '28px',
-                fontWeight: 'bold',
-                animation: 'fadeIn 0.3s ease-in'
-              }}>
-                <span>%{percent}</span>
-                <span style={{ fontSize: '14px', fontWeight: 'normal', marginTop: '4px' }}>{option.votes} Oy</span>
-              </div>
-            )}
+              <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-400"><CheckCircle2 size={14} /> {totalVotes} toplam oy</div>
+            </div>
           </div>
-        ) : (
-          /* 📝 RESİMSİZ TASARIM: Eski klasik buton yapısı */
-          <button
-            className={`poll-option-row ${poll.voted ? 'voted-disabled' : ''}`}
-            onClick={() => onVote(poll.id, index)}
-            disabled={poll.voted}
-            style={{ width: '100%', position: 'relative' }}
-          >
-            {poll.voted && <div className="progress-bar-fill" style={{ width: `${percent}%` }} />}
-            <span className="option-text">{option.text}</span>
-            {poll.voted && <span className="option-percent">%{percent} ({option.votes} oy)</span>}
-          </button>
-        )}
-      </div>
-    );
-  })}
-</div>
-
-          <p className="total-votes-summary">Toplam kullanılan oy sayısı: <strong>{poll.total_votes ?? 0}</strong></p>
         </div>
-      </div>
+      </article>
 
-      <div className="comments-section">
-        <h3>Topluluk Yorumları</h3>
-
-        <form onSubmit={(e) => handleCommentSubmit(e, null)} className="comment-form">
-          <textarea
-            placeholder="Tavsiyenizi veya düşüncenizi yazın..."
-            value={commentInput}
-            onChange={(e) => setCommentInput(e.target.value)}
-            rows="3"
-            required
-          />
-          <button type="submit" className="submit-comment-btn">Yorum Yap</button>
+      <section className="mt-5 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <div className="mb-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-slate-950 text-white"><MessageCircle size={18} /></span><div><h2 className="font-black">Topluluk yorumları</h2><p className="text-xs text-slate-400">Fikrini bırak, diğer görüşleri keşfet.</p></div></div>
+        <form onSubmit={e => submitComment(e)} className="mb-6 flex gap-2">
+          <textarea value={commentInput} onChange={e => setCommentInput(e.target.value)} rows={3} placeholder={isAuthenticated ? 'Ne düşünüyorsun?' : 'Yorum yapmak için giriş yap.'} className="min-w-0 flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10" />
+          <button className="h-fit rounded-xl bg-slate-950 p-3 text-white hover:bg-indigo-700"><Send size={17} /></button>
         </form>
 
-        <div className="comments-list">
-          {Array.isArray(pollComments) && pollComments.map(comment => (
-            <CommentNode 
-              key={comment.id} 
-              comment={comment}
-              replyingToId={replyingToId}
-              setReplyingToId={setReplyingToId}
-              replyInput={replyInput}
-              setReplyInput={setReplyInput}
-              handleCommentSubmit={handleCommentSubmit}
-            />
-          ))}
-          
-          {loadingComments && (
-            <div className="loading-more-comments">Yorumlar yükleniyor... ⏳</div>
-          )}
-          
-          {!hasMore && Array.isArray(pollComments) && pollComments.length > 0 && (
-            <div className="no-more-comments">Tüm yorumlar yüklendi. ✔</div>
-          )}
+        <div className="space-y-3">
+          {comments.map(comment => <CommentNode key={comment.id} comment={comment} replyingTo={replyingTo} setReplyingTo={setReplyingTo} replyInput={replyInput} setReplyInput={setReplyInput} submitComment={submitComment} />)}
+          {loadingComments && <p className="py-4 text-center text-xs font-bold text-slate-400">Yorumlar yükleniyor...</p>}
+          {!loadingComments && hasMore && <button onClick={() => fetchComments(page + 1)} className="w-full rounded-xl bg-slate-100 py-3 text-xs font-black text-slate-600 hover:bg-slate-200">Daha fazla yorum yükle</button>}
+          {!loadingComments && comments.length === 0 && <p className="py-8 text-center text-sm font-semibold text-slate-400">Henüz yorum yok.</p>}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
 
-function CommentNode({ comment, replyingToId, setReplyingToId, replyInput, setReplyInput, handleCommentSubmit }) {
-  if (!comment) return null;
-  const childList = comment.childReplies || comment.child_replies || [];
-
+function CommentNode({ comment, replyingTo, setReplyingTo, replyInput, setReplyInput, submitComment }) {
+  const replies = comment.childReplies || comment.child_replies || [];
   return (
-    <div className="comment-node-branch" style={{ width: '100%' }}>
-      <div className="comment-card">
-        <div className="comment-header">
-          <span className="comment-user">
-  👤 {comment.author ? comment.author.name : (comment.user || 'Kullanıcı')}
-</span>
-          <span className="comment-date">
-            {comment.created_at ? new Date(comment.created_at).toLocaleDateString('tr-TR') : 'Şimdi'}
-          </span>
-        </div>
-        <p className="comment-text">{comment.text}</p>
-        <button className="reply-trigger-btn" onClick={() => setReplyingToId(replyingToId === comment.id ? null : comment.id)}>💬 Cevapla</button>
+    <div>
+      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="flex items-center justify-between gap-3 text-xs"><span className="font-black text-slate-700">{comment.author?.name || comment.user || 'Kullanıcı'}</span><span className="text-slate-400">{comment.created_at ? new Date(comment.created_at).toLocaleDateString('tr-TR') : 'Şimdi'}</span></div>
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{comment.text}</p>
+        <button onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-black text-indigo-600"><Reply size={13} /> Cevapla</button>
       </div>
-
-      {replyingToId === comment.id && (
-        <form onSubmit={(e) => handleCommentSubmit(e, comment.id)} className="reply-form">
-          <input type="text" placeholder={`${comment.user || 'Kullanıcı'} kullanıcısına yanıt yaz...`} value={replyInput} onChange={(e) => setReplyInput(e.target.value)} required autoFocus />
-          <div className="reply-form-actions">
-            <button type="submit" className="reply-submit-btn">Gönder</button>
-            <button type="button" className="reply-cancel-btn" onClick={() => setReplyingToId(null)}>İptal</button>
-          </div>
-        </form>
-      )}
-
-      {childList.length > 0 && (
-        <div className="replies-nested-container">
-          {childList.map(reply => (
-            <CommentNode 
-              key={reply.id} 
-              comment={reply} 
-              replyingToId={replyingToId} 
-              setReplyingToId={setReplyingToId} 
-              replyInput={replyInput} 
-              setReplyInput={setReplyInput} 
-              handleCommentSubmit={handleCommentSubmit} 
-            />
-          ))}
-        </div>
-      )}
+      {replyingTo === comment.id && <form onSubmit={e => submitComment(e, comment.id)} className="ml-4 mt-2 flex gap-2 border-l-2 border-indigo-100 pl-3"><input autoFocus value={replyInput} onChange={e => setReplyInput(e.target.value)} placeholder="Yanıtını yaz..." className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500" /><button className="rounded-xl bg-indigo-600 px-3 text-xs font-black text-white">Gönder</button></form>}
+      {replies.length > 0 && <div className="ml-4 mt-2 space-y-2 border-l-2 border-slate-100 pl-3">{replies.map(reply => <CommentNode key={reply.id} comment={reply} replyingTo={replyingTo} setReplyingTo={setReplyingTo} replyInput={replyInput} setReplyInput={setReplyInput} submitComment={submitComment} />)}</div>}
     </div>
   );
 }
