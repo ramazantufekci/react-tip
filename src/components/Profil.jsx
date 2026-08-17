@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Settings, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
+import { getPollSlug } from './utils/poll';
 
 function Profil({ onDeletePoll }) {
   const { user, token } = useAuth();
