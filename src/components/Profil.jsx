@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
-function Profil({ onDeletePoll }) {
+function Profil({ onDeletePoll, onPollsDeleted }) {
   const { user, token } = useAuth();
 
   const [created, setCreated] = useState([]);
@@ -213,7 +213,7 @@ function Profil({ onDeletePoll }) {
             !data.deleted_ids.includes(poll.id)
         )
       );
-
+onPollsDeleted(data.deleted_ids);
       /*
        * Seçimleri temizle
        */
