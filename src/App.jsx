@@ -10,6 +10,7 @@ import Profil from './components/Profil';
 import Ayarlar from './components/Ayarlar';
 import { useAuth } from './context/AuthContext';
 import { API_BASE_URL } from './config';
+import { getPollSlug } from './utils/poll';
 
 const navBase = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all';
 const navClass = ({ isActive }) =>
