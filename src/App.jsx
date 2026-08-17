@@ -263,7 +263,7 @@ const slug = poll.slug;
             <Routes>
               <Route path="/" element={<Navigate to="/anketler" replace />} />
               <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy} fetchPolls={fetchPolls} onDeletePoll={handleDeletePoll} />} />
-              <Route path="/anketler/:id" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
+              <Route path="/anketler/:slug" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
               <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
               <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={() => fetchPolls('latest')} /> : <Navigate to="/login" replace />} />
               <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} /> : <Navigate to="/login" replace />} />
