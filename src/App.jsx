@@ -44,51 +44,123 @@ function App() {
 
   useEffect(() => { fetchPolls(sortBy); }, [myVotes, myUpvotes, sortBy]);
 
-  const handleVote = async (pollId, optionIndex) => {
+  const handleVote = async (poll, optionIndex) => {
     if (!isAuthenticated) {
       Swal.fire({ icon: 'info', title: 'Oy vermek için giriş yapın', text: 'Topluluğa katılmak yalnızca birkaç saniye sürer.', confirmButtonColor: '#0f172a' });
       return;
     }
-    if (myVotes.includes(pollId)) return;
+    if (myVotes.includes(poll.id)) return;
+    const slug = getPollSlug(poll);
 
+  if (!slug) {
+    console.error('Anket slug bulunamadı:', poll);
+    return;
+  }
     try {
-      const response = await fetch(`${API_BASE_URL}/polls/${pollId}/vote`, {
+      const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}/vote`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ option_index: optionIndex }),
       });
       if (!response.ok) return;
-      const updated = [...myVotes, pollId];
-      setMyVotes(updated);
-      localStorage.setItem('my_votes', JSON.stringify(updated));
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Oyun kaydedildi', showConfirmButton: false, timer: 1600 });
-    } catch (error) {
-      console.error('Oy verilemedi:', error);
+      const result = await response.json();
+      /*
+     * API güncel anketi döndürdüğü için
+     * listedeki anketi de güncelleyebiliriz.
+     */
+    if (result.poll) {
+      setPolls(prev =>
+        prev.map(item =>
+          item.id === result.poll.id
+            ? {
+                ...item,
+                ...result.poll,
+                slug: result.poll.slug || getPollSlug(result.poll),
+                options:
+                  typeof result.poll.options === 'string'
+                    ? JSON.parse(result.poll.options)
+                    : result.poll.options,
+                voted: true,
+              }
+            : item
+        )
+      );
     }
-  };
 
-  const handleUpvote = async (pollId) => {
+    const updated = [...myVotes, poll.id];
+
+    setMyVotes(updated);
+
+    localStorage.setItem(
+      'my_votes',
+      JSON.stringify(updated)
+    );
+
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Oyun kaydedildi',
+      showConfirmButton: false,
+      timer: 1600,
+    });
+  } catch (error) {
+    console.error('Oy verilemedi:', error);
+  }
+};
+
+  const handleUpvote = async (poll) => {
     if (!isAuthenticated) {
       Swal.fire({ icon: 'info', title: 'Giriş gerekli', text: 'Anketleri öne çıkarmak için giriş yapın.', confirmButtonColor: '#0f172a' });
       return;
     }
-    const isUpvoted = myUpvotes.includes(pollId);
+      const slug = getPollSlug(poll);
+
+  if (!slug) {
+    console.error('Anket slug bulunamadı:', poll);
+    return;
+  }
+    const isUpvoted = myUpvotes.includes(poll.id);
     try {
-      const response = await fetch(`${API_BASE_URL}/polls/${pollId}/upvote`, {
+      const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)/upvote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: isUpvoted ? 'remove' : 'add' }),
       });
       if (!response.ok) return;
-      const updated = isUpvoted ? myUpvotes.filter(id => id !== pollId) : [...myUpvotes, pollId];
-      setMyUpvotes(updated);
-      localStorage.setItem('my_upvotes', JSON.stringify(updated));
-    } catch (error) {
-      console.error('Upvote hatası:', error);
-    }
-  };
+      const result = await response.json();
 
-  const handleDeletePoll = async (pollId) => {
+    /*
+     * API'den dönen güncel upvote sayısını
+     * direkt state'e yansıt.
+     */
+    setPolls(prev =>
+      prev.map(item =>
+        item.id === poll.id
+          ? {
+              ...item,
+              upvotes: result.upvotes,
+            }
+          : item
+      )
+    );
+
+    const updated = isUpvoted
+      ? myUpvotes.filter(id => id !== poll.id)
+      : [...myUpvotes, poll.id];
+
+    setMyUpvotes(updated);
+
+    localStorage.setItem(
+      'my_upvotes',
+      JSON.stringify(updated)
+    );
+  } catch (error) {
+    console.error('Upvote hatası:', error);
+  }
+};
+
+  const handleDeletePoll = async (poll) => {
     const result = await Swal.fire({
       title: 'Anket silinsin mi?',
       text: 'Bu işlem geri alınamaz.',
@@ -100,16 +172,38 @@ function App() {
       cancelButtonText: 'Vazgeç',
     });
     if (!result.isConfirmed) return;
+const slug = getPollSlug(poll);
 
+  if (!slug) {
+    console.error('Anket slug bulunamadı:', poll);
+    return;
+  }
     try {
-      const response = await fetch(`${API_BASE_URL}/polls/${pollId}`, {
+      const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
-      if (response.ok) {
-        setPolls(prev => prev.filter(poll => poll.id !== pollId));
-        Swal.fire({ icon: 'success', title: 'Anket silindi', confirmButtonColor: '#0f172a' });
-      }
+      if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Silinemedi',
+        text: error.message || 'Anket silinemedi.',
+        confirmButtonColor: '#0f172a',
+      });
+
+      return;
+    }
+      setPolls(prev =>
+      prev.filter(item => item.id !== poll.id)
+    );
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Anket silindi',
+      confirmButtonColor: '#0f172a',
+    });
     } catch (error) {
       console.error('Silme hatası:', error);
     }
