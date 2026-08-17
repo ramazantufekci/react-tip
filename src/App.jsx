@@ -18,6 +18,11 @@ const navClass = ({ isActive }) =>
 function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
   const [polls, setPolls] = useState([]);
+  const handlePollsDeleted = (deletedIds) => {
+  setPolls((prev) =>
+    prev.filter((poll) => !deletedIds.includes(poll.id))
+  );
+};
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('latest');
   const [myVotes, setMyVotes] = useState(() => JSON.parse(localStorage.getItem('my_votes') || '[]'));
@@ -266,7 +271,7 @@ const slug = poll.slug;
               <Route path="/anketler/:slug" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
               <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
               <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={() => fetchPolls('latest')} /> : <Navigate to="/login" replace />} />
-              <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} /> : <Navigate to="/login" replace />} />
+              <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} onPollsDeleted={handlePollsDeleted} /> : <Navigate to="/login" replace />} />
               <Route path="/ayarlar" element={isAuthenticated ? <Ayarlar /> : <Navigate to="/login" replace />} />
             </Routes>
           </main>
