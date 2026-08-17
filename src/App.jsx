@@ -10,7 +10,6 @@ import Profil from './components/Profil';
 import Ayarlar from './components/Ayarlar';
 import { useAuth } from './context/AuthContext';
 import { API_BASE_URL } from './config';
-import { getPollSlug } from './utils/poll';
 
 const navBase = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all';
 const navClass = ({ isActive }) =>
@@ -51,7 +50,7 @@ function App() {
       return;
     }
     if (myVotes.includes(poll.id)) return;
-    const slug = getPollSlug(poll);
+    const slug = poll.slug;
 
   if (!slug) {
     console.error('Anket slug bulunamadı:', poll);
@@ -76,7 +75,7 @@ function App() {
             ? {
                 ...item,
                 ...result.poll,
-                slug: result.poll.slug || getPollSlug(result.poll),
+                slug: result.poll.slug,
                 options:
                   typeof result.poll.options === 'string'
                     ? JSON.parse(result.poll.options)
@@ -115,7 +114,7 @@ function App() {
       Swal.fire({ icon: 'info', title: 'Giriş gerekli', text: 'Anketleri öne çıkarmak için giriş yapın.', confirmButtonColor: '#0f172a' });
       return;
     }
-      const slug = getPollSlug(poll);
+      const slug = poll.slug);
 
   if (!slug) {
     console.error('Anket slug bulunamadı:', poll);
@@ -173,7 +172,7 @@ function App() {
       cancelButtonText: 'Vazgeç',
     });
     if (!result.isConfirmed) return;
-const slug = getPollSlug(poll);
+const slug = poll.slug;
 
   if (!slug) {
     console.error('Anket slug bulunamadı:', poll);
