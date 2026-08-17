@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Settings, Trash2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Settings, Trash2, Check, X} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
@@ -10,6 +10,8 @@ function Profil({ onDeletePoll }) {
   const [voted, setVoted] = useState([]);
   const [tab, setTab] = useState('created');
   const [loading, setLoading] = useState(true);
+  const [selectedPollIds, setSelectedPollIds] = useState([]);
+const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -37,6 +39,112 @@ function Profil({ onDeletePoll }) {
   );
 };
 
+  const togglePollSelection = (pollId) => {
+  setSelectedPollIds(prev => {
+    if (prev.includes(pollId)) {
+      return prev.filter(id => id !== pollId);
+    }
+
+    return [...prev, pollId];
+  });
+};
+
+  const allPollsSelected =
+  created.length > 0 &&
+  selectedPollIds.length === created.length;
+
+const toggleSelectAll = () => {
+  if (allPollsSelected) {
+    setSelectedPollIds([]);
+    return;
+  }
+
+  setSelectedPollIds(
+    created.map(poll => poll.id)
+  );
+};
+
+  const deleteSelectedPolls = async () => {
+  if (selectedPollIds.length === 0) {
+    return;
+  }
+
+  const result = await Swal.fire({
+    title: 'Anketler silinsin mi?',
+    text: `${selectedPollIds.length} anket kalıcı olarak silinecek.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e11d48',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Evet, sil',
+    cancelButtonText: 'Vazgeç',
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  setIsDeleting(true);
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/polls/bulk-delete`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          poll_ids: selectedPollIds,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || 'Anketler silinemedi.'
+      );
+    }
+
+    /*
+     * Sadece silinenleri listeden çıkar.
+     */
+    setCreated(prev =>
+      prev.filter(
+        poll => !data.deleted_ids.includes(poll.id)
+      )
+    );
+
+    /*
+     * Seçimleri temizle.
+     */
+    setSelectedPollIds([]);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Anketler silindi',
+      text: data.message,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+  } catch (error) {
+    console.error('Toplu silme hatası:', error);
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Silinemedi',
+      text: error.message || 'Anketler silinirken hata oluştu.',
+      confirmButtonColor: '#0f172a',
+    });
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
   if (loading) return <div className="grid min-h-80 place-items-center rounded-3xl border border-slate-200 bg-white text-sm font-semibold text-slate-500">Profil yükleniyor...</div>;
 
   const list = tab === 'created' ? created : voted;
@@ -61,10 +169,34 @@ function Profil({ onDeletePoll }) {
 
       <div className="mt-4 space-y-3">
         {list.length === 0 ? (
+      <div className="mb-5 flex items-center justify-between gap-4">
+  <div>
+    <h2 className="text-xl font-black text-slate-900">
+      Anketlerim
+    </h2>
+
+    <p className="mt-1 text-sm font-medium text-slate-500">
+      Oluşturduğun anketleri yönet.
+    </p>
+  </div>
+
+  {created.length > 0 && (
+    <button
+      type="button"
+      onClick={toggleSelectAll}
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+    >
+      {allPollsSelected
+        ? 'Seçimi kaldır'
+        : 'Tümünü seç'}
+    </button>
+  )}
+</div>
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center"><p className="font-bold text-slate-800">Henüz burada bir şey yok.</p><Link to={tab === 'created' ? '/sor-sor' : '/anketler'} className="mt-3 inline-flex items-center gap-1 text-sm font-black text-indigo-600">Keşfet <ArrowRight size={15} /></Link></div>
         ) : list.map(poll => (
           <div key={poll.id} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="min-w-0"><span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">#{poll.category || 'Genel'}</span><Link to={`/anketler/${poll.slug}`} className="mt-1 block truncate font-extrabold text-slate-900 hover:text-indigo-600">{poll.question}</Link>{tab === 'voted' && <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-emerald-600"><CheckCircle2 size={13} /> Oy kullanıldı</span>}</div>
+            <div className="min-w-0"><span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">#{poll.category || 'Genel'}</span><Link to={`/anketler/${poll.slug}`} className="mt-1 block truncate font-extrabold text-slate-900 hover:text-indigo-600">{poll.question}</Link>
+              {tab === 'voted' && <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-emerald-600"><CheckCircle2 size={13} /> Oy kullanıldı</span>}</div>
             {tab === 'created' && <button onClick={() => remove(poll)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15} /></button>}
           </div>
         ))}
