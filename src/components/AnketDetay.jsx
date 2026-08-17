@@ -7,8 +7,9 @@ import { API_BASE_URL } from '../config';
 function AnketDetay({ polls = [], onVote, onUpvote }) {
   const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { id } = useParams();
-  const poll = polls.find(p => p.id === Number(id));
+  const { slug } = useParams();
+  const [poll, setPoll] = useState(null);
+const [loadingPoll, setLoadingPoll] = useState(true);
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
@@ -16,6 +17,43 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
   const [loadingComments, setLoadingComments] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+  const fetchPoll = async () => {
+    if (!slug) return;
+
+    setLoadingPoll(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`
+      );
+
+      if (!response.ok) {
+        setPoll(null);
+        return;
+      }
+
+      const data = await response.json();
+
+      setPoll({
+        ...data,
+        slug: data.slug || getPollSlug(data),
+        options:
+          typeof data.options === 'string'
+            ? JSON.parse(data.options)
+            : data.options,
+      });
+    } catch (error) {
+      console.error('Anket alınamadı:', error);
+      setPoll(null);
+    } finally {
+      setLoadingPoll(false);
+    }
+  };
+
+  fetchPoll();
+}, [slug]);
 
   const fetchComments = useCallback(async (pageNumber = 1) => {
     setLoadingComments(true);
@@ -59,7 +97,7 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
         <div className="p-5 sm:p-8">
           <div className="flex gap-4">
             <div className="flex shrink-0 flex-col items-center">
-              <button onClick={() => onUpvote(poll.id)} className={`grid h-11 w-11 place-items-center rounded-xl border ${poll.upvotedByMe ? 'border-indigo-200 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-slate-50 text-slate-400 hover:text-indigo-600'}`}><ArrowUp size={20} /></button>
+              <button onClick={() => onUpvote(poll)} className={`grid h-11 w-11 place-items-center rounded-xl border ${poll.upvotedByMe ? 'border-indigo-200 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-slate-50 text-slate-400 hover:text-indigo-600'}`}><ArrowUp size={20} /></button>
               <span className="mt-1 text-xs font-black">{poll.upvotes || 0}</span>
             </div>
             <div className="min-w-0 flex-1">
@@ -77,7 +115,7 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
                     </button>
                   );
                   return (
-                    <button key={index} disabled={poll.voted} onClick={() => onVote(poll.id, index)} className="relative flex min-h-16 items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm font-black text-slate-700 hover:border-indigo-300 disabled:cursor-default">
+                    <button key={index} disabled={poll.voted} onClick={() => onVote(poll, index)} className="relative flex min-h-16 items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm font-black text-slate-700 hover:border-indigo-300 disabled:cursor-default">
                       {poll.voted && <span className="absolute inset-y-0 left-0 bg-indigo-100" style={{ width: `${percent}%` }} />}
                       <span className="relative flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-xl bg-white text-xs shadow-sm">{String.fromCharCode(65 + index)}</span>{option.text}</span>
                       {poll.voted && <span className="relative text-indigo-600">{percent}%</span>}
