@@ -20,8 +20,8 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
   useEffect(() => {
   const fetchPoll = async () => {
-    console.log(useParams());
-    //if (!slug) return;
+    console.log(slug);
+    if (!slug) return;
 
     setLoadingPoll(true);
 
