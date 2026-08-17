@@ -65,7 +65,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
                       <div className="min-w-0">
                         <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-600"><Hash size={11} /> {poll.category || 'Genel'}</span>
                         <h2 className="mt-2 text-base font-extrabold leading-snug text-slate-950 sm:text-lg">
-                          <Link to={`/anketler/${poll.id}`} className="transition hover:text-indigo-600">{poll.question}</Link>
+                          <Link to={`/anketler/${poll}`} className="transition hover:text-indigo-600">{poll.question}</Link>
                         </h2>
                       </div>
                       {user && poll.user_id === user.id && (
@@ -95,7 +95,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
 
                     <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
                       <span className="font-semibold text-slate-400">{totalVotes} toplam oy</span>
-                      <Link to={`/anketler/${poll.id}`} className="inline-flex items-center gap-1.5 font-bold text-indigo-600 hover:text-indigo-700"><MessageCircle size={14} /> Tartışmaya katıl</Link>
+                      <Link to={`/anketler/${poll}`} className="inline-flex items-center gap-1.5 font-bold text-indigo-600 hover:text-indigo-700"><MessageCircle size={14} /> Tartışmaya katıl</Link>
                     </div>
                   </div>
                 </div>
