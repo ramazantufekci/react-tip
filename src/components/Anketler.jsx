@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ArrowUp, Check, Flame, Hash, MessageCircle, Plus, Sparkles, Trash2, Vote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getPollSlug } from './utils/poll';
+import { getPollSlug } from '../utils/poll';
 const filters = [
   { id: 'latest', label: 'En yeni', icon: Sparkles },
   { id: 'upvotes', label: 'Trend', icon: Flame },
