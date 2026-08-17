@@ -20,7 +20,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
   useEffect(() => {
   const fetchPoll = async () => {
-    console.log(polls, "gitdim useeffecte");
+    console.log(slug, "gitdim useeffecte");
     if (!slug) return;
 console.log(polls, "if ten sonrayım");
     setLoadingPoll(true);
