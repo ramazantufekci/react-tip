@@ -32,6 +32,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
         return;
       }
       const data = await response.json();
+      console.log(data);
       setPoll({
         ...data,
         //slug: data.slug,
