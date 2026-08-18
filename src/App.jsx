@@ -15,31 +15,47 @@ const navBase = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 p
 const navClass = ({ isActive }) =>
   `${navBase} ${isActive ? 'bg-slate-950 text-white shadow-lg shadow-slate-950/10' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`;
 
+const normalizePoll = (poll) => ({
+  ...poll,
+  options: typeof poll?.options === 'string'
+    ? JSON.parse(poll.options)
+    : (poll?.options || []),
+  voted: Boolean(poll?.my_vote),
+  upvotedByMe: Boolean(poll?.upvotedByMe),
+});
+
 function App() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
   const [polls, setPolls] = useState([]);
-  const handlePollsDeleted = (deletedIds) => {
-  setPolls((prev) =>
-    prev.filter((poll) => !deletedIds.includes(poll.id))
-  );
-};
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('latest');
-  const [myVotes, setMyVotes] = useState(() => JSON.parse(localStorage.getItem('my_votes') || '[]'));
   const [myUpvotes, setMyUpvotes] = useState(() => JSON.parse(localStorage.getItem('my_upvotes') || '[]'));
 
   const fetchPolls = async (currentSort = sortBy) => {
     setLoading(true);
+
     try {
-      const response = await fetch(`${API_BASE_URL}/polls?sort=${currentSort}&_t=${Date.now()}`);
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+
+      const response = await fetch(
+        `${API_BASE_URL}/polls?sort=${encodeURIComponent(currentSort)}&_t=${Date.now()}`,
+        { headers }
+      );
+
       if (!response.ok) throw new Error('Anketler alınamadı');
+
       const data = await response.json();
-      setPolls(data.map(poll => ({
-        ...poll,
-        options: typeof poll.options === 'string' ? JSON.parse(poll.options) : poll.options,
-        voted: myVotes.includes(poll.id),
-        upvotedByMe: myUpvotes.includes(poll.id),
-      })));
+
+      setPolls(
+        (Array.isArray(data) ? data : [])
+          .filter(Boolean)
+          .map((poll) => ({
+            ...normalizePoll(poll),
+            upvotedByMe: myUpvotes.includes(poll.id),
+          }))
+      );
     } catch (error) {
       console.error('API hatası:', error);
     } finally {
@@ -47,131 +63,149 @@ function App() {
     }
   };
 
-  useEffect(() => { fetchPolls(sortBy); }, [myVotes, myUpvotes, sortBy]);
+  useEffect(() => {
+    if (!authLoading) fetchPolls(sortBy);
+  }, [authLoading, token, sortBy]);
 
-  const handleVote = async (pollIdentifier, optionIndex) => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/polls/${encodeURIComponent(pollIdentifier.slug)}/vote`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+  const handlePollsDeleted = (deletedIds) => {
+    const ids = Array.isArray(deletedIds) ? deletedIds : [];
+    setPolls((prev) => prev.filter((poll) => poll && !ids.includes(poll.id)));
+  };
+
+  const handlePollCreated = (createdPoll) => {
+    if (!createdPoll?.id) return;
+
+    const normalized = normalizePoll(createdPoll);
+
+    setPolls((prev) => [
+      normalized,
+      ...prev.filter((poll) => poll && poll.id !== normalized.id),
+    ]);
+  };
+
+  const handleVote = async (pollOrSlug, optionIndex) => {
+    const slug = typeof pollOrSlug === 'string'
+      ? pollOrSlug
+      : pollOrSlug?.slug;
+
+    if (!slug) {
+      throw new Error('Anket slug bilgisi bulunamadı.');
+    }
+
+    if (!isAuthenticated || !token) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Giriş gerekli',
+        text: 'Oy kullanmak için giriş yapmalısınız.',
+        confirmButtonColor: '#0f172a',
+      });
+      throw new Error('Giriş yapmalısınız.');
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/polls/${encodeURIComponent(slug)}/vote`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ option_index: optionIndex }),
+        }
+      );
+
+      const data = await response.json().catch(() => ({}));
+      console.log('OY CEVABI:', data);
+
+      if (!response.ok) {
+        if (response.status === 409 && data.already_voted) {
+          const alreadyVotedPoll = data.poll
+            ? normalizePoll({
+                ...data.poll,
+                my_vote: data.my_vote || data.vote || null,
+              })
+            : null;
+
+          if (alreadyVotedPoll?.id) {
+            setPolls((prev) => prev.filter(Boolean).map((poll) =>
+              poll.id === alreadyVotedPoll.id ? alreadyVotedPoll : poll
+            ));
+          }
+
+          throw new Error('Bu ankete daha önce oy verdiniz.');
+        }
+
+        throw new Error(data.message || 'Oy kullanılamadı.');
+      }
+
+      const updatedPoll = data.poll;
+
+      if (!updatedPoll?.id) {
+        throw new Error('Sunucudan geçerli anket verisi dönmedi.');
+      }
+
+      const normalizedPoll = normalizePoll({
+        ...updatedPoll,
+        my_vote: data.my_vote || {
           option_index: optionIndex,
-        }),
-      }
-    );
+        },
+      });
 
-    const data = await response.json();
+      setPolls((prev) => prev.filter(Boolean).map((poll) =>
+        poll.id === normalizedPoll.id
+          ? { ...poll, ...normalizedPoll }
+          : poll
+      ));
 
-    console.log('OY CEVABI:', data);
-
-    if (!response.ok) {
-      if (response.status === 409 && data.already_voted) {
-        Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'error',
-      title: 'Bu ankete daha önce oy verdiniz',
-      showConfirmButton: false,
-      timer: 1600,
-    });
-        throw new Error(
-          'Bu ankete daha önce oy verdiniz.'
-        );
-      }
-
-      throw new Error(
-        data.message || 'Oy kullanılamadı.'
-      );
+      return normalizedPoll;
+    } catch (error) {
+      console.error('Oy verme hatası:', error);
+      throw error;
     }
-
-    const updatedPoll = data.poll;
-
-    if (!updatedPoll || !updatedPoll.id) {
-      throw new Error(
-        'Sunucudan geçerli anket verisi dönmedi.'
-      );
-    }
-
-    // undefined üretmez
-    setPolls((prev) =>
-      prev
-        .filter(Boolean)
-        .map((poll) =>
-          poll.id === updatedPoll.id
-            ? {
-                ...updatedPoll,
-                options:
-                  typeof updatedPoll.options === 'string'
-                    ? JSON.parse(updatedPoll.options)
-                    : updatedPoll.options,
-              }
-            : poll
-        )
-    );
-
-    return updatedPoll;
-
-  } catch (error) {
-    console.error('Oy verme hatası:', error);
-    throw error;
-  }
-};
+  };
 
   const handleUpvote = async (poll) => {
     if (!isAuthenticated) {
       Swal.fire({ icon: 'info', title: 'Giriş gerekli', text: 'Anketleri öne çıkarmak için giriş yapın.', confirmButtonColor: '#0f172a' });
       return;
     }
-      const slug = poll.slug;
 
-  if (!slug) {
-    console.error('Anket slug bulunamadı:', poll);
-    return;
-  }
+    const slug = poll?.slug;
+    if (!slug) {
+      console.error('Anket slug bulunamadı:', poll);
+      return;
+    }
+
     const isUpvoted = myUpvotes.includes(poll.id);
+
     try {
       const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}/upvote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: isUpvoted ? 'remove' : 'add' }),
       });
+
       if (!response.ok) return;
+
       const result = await response.json();
 
-    /*
-     * API'den dönen güncel upvote sayısını
-     * direkt state'e yansıt.
-     */
-    setPolls(prev =>
-      prev.map(item =>
+      setPolls((prev) => prev.filter(Boolean).map((item) =>
         item.id === poll.id
-          ? {
-              ...item,
-              upvotes: result.upvotes,
-            }
+          ? { ...item, upvotes: result.upvotes }
           : item
-      )
-    );
+      ));
 
-    const updated = isUpvoted
-      ? myUpvotes.filter(id => id !== poll.id)
-      : [...myUpvotes, poll.id];
+      const updated = isUpvoted
+        ? myUpvotes.filter((id) => id !== poll.id)
+        : [...myUpvotes, poll.id];
 
-    setMyUpvotes(updated);
-
-    localStorage.setItem(
-      'my_upvotes',
-      JSON.stringify(updated)
-    );
-  } catch (error) {
-    console.error('Upvote hatası:', error);
-  }
-};
+      setMyUpvotes(updated);
+      localStorage.setItem('my_upvotes', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Upvote hatası:', error);
+    }
+  };
 
   const handleDeletePoll = async (poll) => {
     const result = await Swal.fire({
@@ -184,39 +218,36 @@ function App() {
       confirmButtonText: 'Evet, sil',
       cancelButtonText: 'Vazgeç',
     });
-    if (!result.isConfirmed) return;
-const slug = poll.slug;
 
-  if (!slug) {
-    console.error('Anket slug bulunamadı:', poll);
-    return;
-  }
+    if (!result.isConfirmed) return;
+
+    const slug = poll?.slug;
+    if (!slug) return;
+
     try {
       const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
+
       if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
+        const error = await response.json().catch(() => ({}));
+        Swal.fire({
+          icon: 'error',
+          title: 'Silinemedi',
+          text: error.message || 'Anket silinemedi.',
+          confirmButtonColor: '#0f172a',
+        });
+        return;
+      }
+
+      setPolls((prev) => prev.filter((item) => item && item.id !== poll.id));
 
       Swal.fire({
-        icon: 'error',
-        title: 'Silinemedi',
-        text: error.message || 'Anket silinemedi.',
+        icon: 'success',
+        title: 'Anket silindi',
         confirmButtonColor: '#0f172a',
       });
-
-      return;
-    }
-      setPolls(prev =>
-      prev.filter(item => item.id !== poll.id)
-    );
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Anket silindi',
-      confirmButtonColor: '#0f172a',
-    });
     } catch (error) {
       console.error('Silme hatası:', error);
     }
@@ -275,10 +306,10 @@ const slug = poll.slug;
           <main className="min-h-[520px]">
             <Routes>
               <Route path="/" element={<Navigate to="/anketler" replace />} />
-              <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy} fetchPolls={fetchPolls} onDeletePoll={handleDeletePoll} />} />
+              <Route path="/anketler" element={<Anketler polls={polls} onVote={handleVote} onUpvote={handleUpvote} sortBy={sortBy} setSortBy={setSortBy} onDeletePoll={handleDeletePoll} />} />
               <Route path="/anketler/:slug" element={<AnketDetay polls={polls} onVote={handleVote} onUpvote={handleUpvote} />} />
               <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/anketler" replace />} />
-              <Route path="/sor-sor" element={isAuthenticated ? (<SorSor onPollCreated={(poll) => {setPolls((prev) => [poll,...prev,]);}}/>): <Navigate to="/login" replace />} />
+              <Route path="/sor-sor" element={isAuthenticated ? <SorSor onPollCreated={handlePollCreated} /> : <Navigate to="/login" replace />} />
               <Route path="/profil" element={isAuthenticated ? <Profil onDeletePoll={handleDeletePoll} onPollsDeleted={handlePollsDeleted} /> : <Navigate to="/login" replace />} />
               <Route path="/ayarlar" element={isAuthenticated ? <Ayarlar /> : <Navigate to="/login" replace />} />
             </Routes>
