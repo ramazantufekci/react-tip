@@ -54,6 +54,7 @@ function App() {
       Swal.fire({ icon: 'info', title: 'Oy vermek için giriş yapın', text: 'Topluluğa katılmak yalnızca birkaç saniye sürer.', confirmButtonColor: '#0f172a' });
       return;
     }
+    console.log("vote",poll);
     if (myVotes.includes(poll.id)) return;
     const slug = poll.slug;
 
@@ -73,6 +74,7 @@ function App() {
      * API güncel anketi döndürdüğü için
      * listedeki anketi de güncelleyebiliriz.
      */
+      console.log(result.poll);
     if (result.poll) {
       setPolls(prev =>
         prev.map(item =>
