@@ -49,70 +49,68 @@ function App() {
 
   useEffect(() => { fetchPolls(sortBy); }, [myVotes, myUpvotes, sortBy]);
 
-  const handleVote = async (poll, optionIndex) => {
-    if (!isAuthenticated) {
-      Swal.fire({ icon: 'info', title: 'Oy vermek için giriş yapın', text: 'Topluluğa katılmak yalnızca birkaç saniye sürer.', confirmButtonColor: '#0f172a' });
-      return;
-    }
-    console.log("vote",poll.id);
-    if (myVotes.includes(poll.id)) return;
-    const slug = poll.slug;
-
-  if (!slug) {
-    console.error('Anket slug bulunamadı:', poll);
-    return;
-  }
-    try {
-      const response = await fetch(`${API_BASE_URL}/polls/${encodeURIComponent(slug)}/vote`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ option_index: optionIndex }),
-      });
-      if (!response.ok) return;
-      const result = await response.json();
-      /*
-     * API güncel anketi döndürdüğü için
-     * listedeki anketi de güncelleyebiliriz.
-     */
-      console.log(result.poll);
-    if (result.poll) {
-      setPolls(prev =>
-        prev.map(item =>
-          item.id === result.poll.id
-            ? {
-                ...item,
-                ...result.poll,
-                slug: result.poll.slug,
-                options:
-                  typeof result.poll.options === 'string'
-                    ? JSON.parse(result.poll.options)
-                    : result.poll.options,
-                voted: true,
-              }
-            : item
-        )
-      );console.log("Burda mı hata veriyor",polls);
-    }
-
-    const updated = [...myVotes, poll.id];
-console.log("updated kısmını geçtim",poll);
-    setMyVotes(updated);
-console.log("setten sonra",myVotes);
-    localStorage.setItem(
-      'my_votes',
-      JSON.stringify(updated)
+  const handleVote = async (pollIdentifier, optionIndex) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/polls/${encodeURIComponent(pollIdentifier)}/vote`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          option_index: optionIndex,
+        }),
+      }
     );
 
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Oyun kaydedildi',
-      showConfirmButton: false,
-      timer: 1600,
-    });
+    const data = await response.json();
+
+    console.log('OY CEVABI:', data);
+
+    if (!response.ok) {
+      if (response.status === 409 && data.already_voted) {
+        throw new Error(
+          'Bu ankete daha önce oy verdiniz.'
+        );
+      }
+
+      throw new Error(
+        data.message || 'Oy kullanılamadı.'
+      );
+    }
+
+    const updatedPoll = data.poll;
+
+    if (!updatedPoll || !updatedPoll.id) {
+      throw new Error(
+        'Sunucudan geçerli anket verisi dönmedi.'
+      );
+    }
+
+    // undefined üretmez
+    setPolls((prev) =>
+      prev
+        .filter(Boolean)
+        .map((poll) =>
+          poll.id === updatedPoll.id
+            ? {
+                ...updatedPoll,
+                options:
+                  typeof updatedPoll.options === 'string'
+                    ? JSON.parse(updatedPoll.options)
+                    : updatedPoll.options,
+              }
+            : poll
+        )
+    );
+
+    return updatedPoll;
+
   } catch (error) {
-    console.error('Oy verilemedi:', error);
+    console.error('Oy verme hatası:', error);
+    throw error;
   }
 };
 
