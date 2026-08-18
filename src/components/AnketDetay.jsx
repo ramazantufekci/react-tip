@@ -5,13 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
-  console.log('🔥 ANKET DETAY RENDER');
   const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { slug } = useParams();
-  console.log('DETAY SAYFASI SLUG:', slug);
   const [poll, setPoll] = useState(null);
-const [loadingPoll, setLoadingPoll] = useState(true);
+  const [loadingPoll, setLoadingPoll] = useState(true);
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
@@ -22,28 +20,17 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
   useEffect(() => {
   const fetchPoll = async () => {
-    console.log('DETAY USEEFFECT ÇALIŞTI');
-    console.log('SLUG:', slug);
-    if (!slug){ console.log('SLUG YOK!');return;}
+    if (!slug)return;
     setLoadingPoll(true);
     try {
       const response = await fetch(
         `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`
       );
-      console.log('ANKET GET URL:', `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`);
-console.log(
-                'ANKET GET STATUS:',
-                response.status
-            );
       if (!response.ok) {
         setPoll(null);
         return;
       }
       const data = await response.json();
-      console.log(
-                'ANKET GET DATA:',
-                data
-            );
       setPoll({
         ...data,
         //slug: data.slug,
@@ -53,10 +40,6 @@ console.log(
             : data.options,
       });
     } catch (error) {
-      console.error(
-                'ANKET GET HATASI:',
-                error
-            );
       console.error('Anket alınamadı:', error);
       setPoll(null);
     } finally {
@@ -147,7 +130,7 @@ if (!poll) {
                 {(poll.options || []).map((option, index) => {
                   const percent = totalVotes ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0;
                   if (option.image_path) return (
-                    <button key={index} disabled={poll.voted} onClick={() => !poll.voted && onVote(poll.id, index)} className="group relative h-64 overflow-hidden rounded-2xl border border-slate-200 text-left">
+                    <button key={index} disabled={poll.voted} onClick={() => !poll.voted && onVote(poll, index)} className="group relative h-64 overflow-hidden rounded-2xl border border-slate-200 text-left">
                       <img src={option.image_path} alt={option.text || 'Seçenek'} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                       <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 text-sm font-black text-white">{option.text || `Seçenek ${String.fromCharCode(65 + index)}`}</span>
                       {poll.voted && <span className="absolute inset-0 grid place-items-center bg-indigo-600/80 text-white"><span className="text-center"><strong className="block text-4xl font-black">{percent}%</strong><small>{option.votes || 0} oy</small></span></span>}
