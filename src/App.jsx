@@ -97,7 +97,7 @@ function App() {
     const updated = [...myVotes, poll.id];
 console.log("updated kısmını geçtim",poll);
     setMyVotes(updated);
-
+console.log("setten sonra",myVotes);
     localStorage.setItem(
       'my_votes',
       JSON.stringify(updated)
