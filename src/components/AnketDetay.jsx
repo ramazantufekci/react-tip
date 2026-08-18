@@ -107,9 +107,7 @@ console.log(
     </div>
   );
 }
-const poll = polls.find(
-    (p) => p.slug === slug
-  );
+
 if (!poll) {
   return (
     <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
