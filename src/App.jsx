@@ -71,6 +71,14 @@ function App() {
 
     if (!response.ok) {
       if (response.status === 409 && data.already_voted) {
+        Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'Bu ankete daha önce oy verdiniz',
+      showConfirmButton: false,
+      timer: 1600,
+    });
         throw new Error(
           'Bu ankete daha önce oy verdiniz.'
         );
