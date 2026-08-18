@@ -63,13 +63,11 @@ function Profil({ onDeletePoll, onPollsDeleted }) {
         );
 
         setVoted(
-          allPolls
-            .filter((p) => votedIds.includes(p.id))
-            .map((p) => ({
-              ...parse(p),
-              voted: true,
-            }))
-        );
+  (profile.voted_polls || []).map(poll => ({
+    ...parse(poll),
+    voted: true,
+  }))
+);
       } catch (error) {
         console.error('Profil yükleme hatası:', error);
       } finally {
