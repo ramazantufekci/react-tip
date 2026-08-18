@@ -48,7 +48,9 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
               <p className="mt-1 text-sm text-slate-500">Başka bir kategori seçmeyi deneyebilirsin.</p>
             </div>
           ) : filteredPolls.map(poll => {
-            const totalVotes = (poll.options || []).reduce((sum, opt) => sum + (opt.votes || 0), 0);
+            const totalVotes = (poll.options || []).reduce((sum, opt) => sum + Number(opt?.votes || 0), 0);
+            const votedOptionIndex = poll.my_vote?.option_index ?? null;
+            const hasVoted = votedOptionIndex !== null;
             return (
               <article key={poll.id} className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60">
                 <div className="flex gap-3 p-4 sm:gap-5 sm:p-5">
@@ -63,6 +65,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-600"><Hash size={11} /> {poll.category || 'Genel'}</span>
+                        {hasVoted && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-700"><Check size={11} /> Oy verdin</span>}
                         <h2 className="mt-2 text-base font-extrabold leading-snug text-slate-950 sm:text-lg">
                           <Link to={`/anketler/${poll.slug}`} className="transition hover:text-indigo-600">{poll.question}</Link>
                         </h2>
@@ -77,16 +80,16 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
                         const percent = totalVotes ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0;
                         const hasImage = Boolean(option.image_path);
                         return hasImage ? (
-                          <button key={index} type="button" onClick={() => !poll.voted && onVote(poll, index)} disabled={poll.voted} className="group/option relative h-48 overflow-hidden rounded-2xl border border-slate-200 text-left">
+                          <button key={index} type="button" onClick={() => !hasVoted && onVote(poll, index)} disabled={hasVoted} className="group/option relative h-48 overflow-hidden rounded-2xl border border-slate-200 text-left">
                             <img src={option.image_path} alt={option.text || `Seçenek ${index + 1}`} className="h-full w-full object-cover transition duration-500 group-hover/option:scale-105" />
                             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-3 pt-10 text-xs font-bold text-white">{option.text || `Seçenek ${String.fromCharCode(65 + index)}`}</span>
-                            {poll.voted && <span className="absolute inset-0 grid place-items-center bg-indigo-600/75 text-center text-white backdrop-blur-[1px]"><span><strong className="block text-2xl">{percent}%</strong><small>{option.votes || 0} oy</small></span></span>}
+                            {hasVoted && <span className={`absolute inset-0 grid place-items-center text-center text-white backdrop-blur-[1px] ${votedOptionIndex === index ? 'bg-indigo-600/80' : 'bg-slate-950/45'}`}><span><strong className="block text-2xl">{percent}%</strong><small>{option.votes || 0} oy</small>{votedOptionIndex === index && <small className="mt-1 block font-black">✓ Senin oyun</small>}</span></span>}
                           </button>
                         ) : (
-                          <button key={index} type="button" onClick={() => onVote(poll, index)} disabled={poll.voted} className="relative flex min-h-14 items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 px-4 text-left text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-white disabled:cursor-default">
-                            {poll.voted && <span className="absolute inset-y-0 left-0 bg-indigo-100/80" style={{ width: `${percent}%` }} />}
+                          <button key={index} type="button" onClick={() => onVote(poll, index)} disabled={hasVoted} className="relative flex min-h-14 items-center justify-between overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 px-4 text-left text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:bg-white disabled:cursor-default">
+                            {hasVoted && <span className={`absolute inset-y-0 left-0 ${votedOptionIndex === index ? 'bg-indigo-100' : 'bg-slate-100'}`} style={{ width: `${percent}%` }} />}
                             <span className="relative flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-lg bg-white text-[10px] font-black text-slate-400 shadow-sm">{String.fromCharCode(65 + index)}</span>{option.text}</span>
-                            {poll.voted && <span className="relative text-xs font-black text-indigo-600">{percent}%</span>}
+                            {hasVoted && <span className="relative text-xs font-black text-indigo-600">{percent}%</span>}
                           </button>
                         );
                       })}
