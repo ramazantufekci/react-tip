@@ -28,7 +28,7 @@ function SorSor({ onPollCreated }) {
         if (!response.ok) {
           throw new Error(data.message || 'Kategoriler yüklenemedi.');
         }
-
+console.log(data);
         const list = Array.isArray(data) ? data : (data.categories || []);
 
         if (!cancelled) {
