@@ -26,7 +26,6 @@ function SorSor({ onPollCreated }) {
       Swal.fire({ icon: 'warning', title: 'Eksik bilgi', text: 'Soru ve kategori alanlarını doldurun.', confirmButtonColor: '#0f172a' });
       return;
     }
-     console.log('ANKET YAYINLA TIKLANDI');
     setLoading(true);
     const formData = new FormData();
     formData.append('question', question);
@@ -35,16 +34,16 @@ function SorSor({ onPollCreated }) {
       formData.append(`options_text[${index}]`, option.text);
       if (option.image) formData.append(`options_images[${index}]`, option.image);
     });
- console.log('POST GÖNDERİLİYOR');
+
     try {
       const response = await fetch(`${API_BASE_URL}/polls`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
-      console.log('RESPONSE:', response.status);
+      
       const data = await response.json();
-      console.log('OLUŞTURULAN ANKET:', data);
+    
       if (!response.ok) throw new Error('Anket oluşturulamadı.');
       if (typeof onPollCreated === 'function') await onPollCreated();
       await Swal.fire({ icon: 'success', title: 'Anket yayında!', text: 'Topluluk artık senin için karar verebilir.', confirmButtonColor: '#0f172a', timer: 1800 });
-      console.log('SLUG:', data.slug);
+      
       navigate(`/anketler/${encodeURIComponent(data.slug)}`);
     } catch (error) {
       Swal.fire({ icon: 'error', title: 'Bir sorun oluştu', text: error.message, confirmButtonColor: '#0f172a' });
