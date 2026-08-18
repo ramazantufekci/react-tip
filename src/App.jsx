@@ -52,7 +52,7 @@ function App() {
   const handleVote = async (pollIdentifier, optionIndex) => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/polls/${encodeURIComponent(pollIdentifier)}/vote`,
+      `${API_BASE_URL}/polls/${encodeURIComponent(pollIdentifier.slug)}/vote`,
       {
         method: 'POST',
         headers: {
