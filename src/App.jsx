@@ -54,7 +54,7 @@ function App() {
       Swal.fire({ icon: 'info', title: 'Oy vermek için giriş yapın', text: 'Topluluğa katılmak yalnızca birkaç saniye sürer.', confirmButtonColor: '#0f172a' });
       return;
     }
-    console.log("vote",poll);
+    console.log("vote",poll.id);
     if (myVotes.includes(poll.id)) return;
     const slug = poll.slug;
 
