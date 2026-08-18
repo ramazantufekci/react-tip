@@ -20,6 +20,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
   useEffect(() => {
   const fetchPoll = async () => {
+    console.log('DETAY API URL:', `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`);
     console.log("slug",slug);
     if (!slug) return;
     setLoadingPoll(true);
@@ -27,13 +28,13 @@ const [loadingPoll, setLoadingPoll] = useState(true);
       const response = await fetch(
         `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`
       );
-
+console.log('DETAY STATUS:', response.status);
       if (!response.ok) {
         setPoll(null);
         return;
       }
       const data = await response.json();
-      console.log(data);
+      console.log('DETAY API DATA:', data);
       setPoll({
         ...data,
         //slug: data.slug,
