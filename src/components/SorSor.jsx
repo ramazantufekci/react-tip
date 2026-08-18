@@ -29,12 +29,16 @@ function SorSor({ onPollCreated }) {
           throw new Error(data.message || 'Kategoriler yüklenemedi.');
         }
 console.log(data);
+        const options = data.map(item=>({
+          value: item.id,
+          label: item.name
+        }));
         const list = Array.isArray(data) ? data : (data.categories || []);
 
         if (!cancelled) {
-          setCategories(list);
+          setCategories(options);
           if (list.length === 1) {
-            setCategoryId(String(list[0].id));
+            setCategoryId(String(options[0].value));
           }
         }
       } catch (error) {
