@@ -20,6 +20,7 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
 
   useEffect(() => {
   const fetchPoll = async () => {
+    console.log("anket detay useeffect");
     if (!slug)return;
     setLoadingPoll(true);
     try {
@@ -130,7 +131,7 @@ if (!poll) {
                 {(poll.options || []).map((option, index) => {
                   const percent = totalVotes ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0;
                   if (option.image_path) return (
-                    <button key={index} disabled={poll.voted} onClick={() => !poll.voted && onVote(poll, index)} className="group relative h-64 overflow-hidden rounded-2xl border border-slate-200 text-left">
+                    <button key={index} disabled={poll.voted} onClick={() => !poll.voted && onVote(poll.id, index)} className="group relative h-64 overflow-hidden rounded-2xl border border-slate-200 text-left">
                       <img src={option.image_path} alt={option.text || 'Seçenek'} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                       <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 text-sm font-black text-white">{option.text || `Seçenek ${String.fromCharCode(65 + index)}`}</span>
                       {poll.voted && <span className="absolute inset-0 grid place-items-center bg-indigo-600/80 text-white"><span className="text-center"><strong className="block text-4xl font-black">{percent}%</strong><small>{option.votes || 0} oy</small></span></span>}
