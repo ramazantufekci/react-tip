@@ -8,6 +8,7 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
   const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { slug } = useParams();
+  console.log('DETAY SAYFASI SLUG:', slug);
   const [poll, setPoll] = useState(null);
 const [loadingPoll, setLoadingPoll] = useState(true);
   const [comments, setComments] = useState([]);
@@ -20,21 +21,28 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
   useEffect(() => {
   const fetchPoll = async () => {
-    console.log('DETAY API URL:', `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`);
-    console.log("slug",slug);
-    if (!slug) return;
+    console.log('DETAY USEEFFECT ÇALIŞTI');
+    console.log('SLUG:', slug);
+    if (!slug){ console.log('SLUG YOK!');return;}
     setLoadingPoll(true);
     try {
       const response = await fetch(
         `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`
       );
-console.log('DETAY STATUS:', response.status);
+      console.log('ANKET GET URL:', `${API_BASE_URL}/polls/${encodeURIComponent(slug)}`);
+console.log(
+                'ANKET GET STATUS:',
+                response.status
+            );
       if (!response.ok) {
         setPoll(null);
         return;
       }
       const data = await response.json();
-      console.log('DETAY API DATA:', data);
+      console.log(
+                'ANKET GET DATA:',
+                data
+            );
       setPoll({
         ...data,
         //slug: data.slug,
@@ -44,6 +52,10 @@ console.log('DETAY STATUS:', response.status);
             : data.options,
       });
     } catch (error) {
+      console.error(
+                'ANKET GET HATASI:',
+                error
+            );
       console.error('Anket alınamadı:', error);
       setPoll(null);
     } finally {
