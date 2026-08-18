@@ -95,7 +95,7 @@ function App() {
     }
 
     const updated = [...myVotes, poll.id];
-
+console.log("updated kısmını geçtim",poll);
     setMyVotes(updated);
 
     localStorage.setItem(
