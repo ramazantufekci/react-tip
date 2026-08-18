@@ -16,7 +16,8 @@
     "react-router-dom": "^7.17.0",
     "sweetalert2":"^11.26.0",
     "@tailwindcss/postcss": "^4.0.0",
-    "tailwindcss":"^4.3.0"
+    "tailwindcss":"^4.3.0",
+    "react-select":"latest"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
