@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Select from 'react-select'
 import { ImagePlus, Plus, Send, Trash2, Type, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -143,27 +144,9 @@ function SorSor({ onPollCreated }) {
           <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-black text-slate-600">Sorun / ikilemin</span><input className={input} value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Örn. Bu iki ayakkabıdan hangisi daha iyi?" /></label>
           <label className="sm:col-span-2">
             <span className="mb-1.5 block text-xs font-black text-slate-600">Kategori</span>
-            <select
-              className={input}
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              required
-              disabled={categoriesLoading || loading || categories.length === 0}
-            >
-              <option value="">
-                {categoriesLoading ? 'Kategoriler yükleniyor...' : 'Kategori seçin'}
-              </option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            {!categoriesLoading && categories.length === 0 && (
-              <p className="mt-1.5 text-xs font-semibold text-rose-600">
-                Kullanılabilir kategori bulunamadı. Yönetici panelinden kategori ekleyin.
-              </p>
-            )}
+            <Select
+              options={categories}
+            />
           </label>
         </div>
 
