@@ -91,7 +91,7 @@ function App() {
               }
             : item
         )
-      );
+      );console.log("Burda mı hata veriyor",polls);
     }
 
     const updated = [...myVotes, poll.id];
