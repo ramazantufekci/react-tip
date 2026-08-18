@@ -20,6 +20,7 @@ const [loadingPoll, setLoadingPoll] = useState(true);
 
   useEffect(() => {
   const fetchPoll = async () => {
+    console.log("slug",slug);
     if (!slug) return;
     setLoadingPoll(true);
     try {
