@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 
 function AnketDetay({ polls = [], onVote, onUpvote }) {
+  console.log('🔥 ANKET DETAY RENDER');
   const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { slug } = useParams();
