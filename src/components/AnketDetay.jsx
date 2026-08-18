@@ -17,10 +17,17 @@ function AnketDetay({ polls = [], onVote, onUpvote }) {
   const [loadingComments, setLoadingComments] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
+const poll = polls.find(
+    p => p && p.slug === slug
+);
 
+const votedOptionIndex =
+    poll?.my_vote?.option_index ?? null;
+
+const hasVoted =
+    votedOptionIndex !== null;
   useEffect(() => {
   const fetchPoll = async () => {
-    console.log("anket detay useeffect");
     if (!slug)return;
     setLoadingPoll(true);
     try {
