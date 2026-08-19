@@ -73,8 +73,8 @@ console.log(data);
 const [selectedOption, setSelectedOption] = useState(null);
   const handleSubmit = async (e) => {
     e.preventDefault();
-console.log(selectedOption);
-    if (!question.trim() || !categoryId) {
+
+    if (!question.trim() || !selectedOption.value) {
       Swal.fire({ icon: 'warning', title: 'Eksik bilgi', text: 'Soru ve kategori alanını doldurun.', confirmButtonColor: '#0f172a' });
       return;
     }
@@ -83,7 +83,7 @@ console.log(selectedOption);
 
     const formData = new FormData();
     formData.append('question', question.trim());
-    formData.append('category_id', categoryId);
+    formData.append('category_id', selectedOption.value);
 
     options.forEach((option, index) => {
       formData.append(`options_text[${index}]`, option.text || '');
