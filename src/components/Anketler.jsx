@@ -13,7 +13,7 @@ function Anketler({ polls, onVote, onUpvote, sortBy, setSortBy, onDeletePoll }) 
   const [selectedCategory, setSelectedCategory] = useState('Tümü');
   const categories = useMemo(() => ['Tümü', ...new Set(polls.map(p => p.category).filter(Boolean))], [polls]);
   const filteredPolls = selectedCategory === 'Tümü' ? polls : polls.filter(p => p.category === selectedCategory);
-console.log(onVote);
+console.log(polls);
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
       <section className="min-w-0">
