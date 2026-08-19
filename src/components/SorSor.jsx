@@ -70,7 +70,7 @@ console.log(data);
     if (options.length <= 2) return;
     setOptions((prev) => prev.filter((_, i) => i !== index));
   };
-
+const [selectedOption, setSelectedOption] = useState(null);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -80,7 +80,7 @@ console.log(data);
     }
 
     setLoading(true);
-
+console.log(selectedOption);
     const formData = new FormData();
     formData.append('question', question.trim());
     formData.append('category_id', categoryId);
@@ -148,9 +148,7 @@ console.log(data);
           <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-black text-slate-600">Sorun / ikilemin</span><input className={input} value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Örn. Bu iki ayakkabıdan hangisi daha iyi?" /></label>
           <label className="sm:col-span-2">
             <span className="mb-1.5 block text-xs font-black text-slate-600">Kategori</span>
-            <Select
-              options={categories}
-            />
+            <Select options={categories} onChange={setSelectedOption}/>
           </label>
         </div>
 
